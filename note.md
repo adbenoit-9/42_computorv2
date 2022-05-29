@@ -1,0 +1,39 @@
+stockage data: `dictionary`
+
+Class:
+- [x] Complex : projet matrix
+- [ ] Matrix : piscine python vector
+- [ ] Function : decomposition ?
+
+- [ ] equation : computorv1 => racine fonction
+
+---
+example:
+```
+> var1=6
+> funct1(x) = x + 3
+> mat1 = [[2, 3]; [1, 0]]
+> comp1 = 1 + 4i
+```
+```
+data = {
+    'var1' = 6,
+    'funct1' = Function("x + 3"),
+    'mat1' = Matrix([[2, 3], [1, 0]]),
+    'comp1' = Complex(1, 4)
+}
+```
+---
+bonus:
+- facile:
+    - [ ] Affichage de courbe de fonctions
+    - [ ] Calcul de norme
+    - [ ] Afficher la liste des variables stockées ainsi que leurs valeurs
+    - [ ] Inversion de matrice et d'autres deja fait dans Matrix
+    - [ ] Ajout de fonctions usuelles (exponentielle, racine carrée, valeur absolue, cosinus,
+    sinus, tangente, etc.)
+
+- moyen:
+    - [ ] Ajout du calcul en radian pour les angles (enfin possible que facile avec python)
+    - [ ] Composition de fonction (depend de l'implementaion de la class)
+    - [ ] Historique des commandes avec résultats (pas fun)
