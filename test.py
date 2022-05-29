@@ -1,13 +1,8 @@
-from complex import Complex
-from vector import Vector
+from ft_complex import Complex
+from ft_matrix import Matrix
 
-comp1 = Complex(1, 2)
-comp2 = Complex(1, 2)
-comp3 = Complex(2, 3)
-comp4 = Complex()
-print(str(comp1))
-print(str(comp3))
-print(comp1 != comp3)
-comp1 = comp3.copy()
-comp3.real = 0
-print(str(comp1))
+mat = Matrix([[1, 2, 5], [Complex(1, 2), 3, 3.]])
+
+print(mat)
+print()
+print(mat.T())

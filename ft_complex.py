@@ -1,9 +1,15 @@
-from utils import isnumber
 import math
+
+
+def isrealnumber(n):
+    if isinstance(n, float) or isinstance(n, int):
+        return True
+    return False
+
 
 class Complex:
     def __init__(self, real=0, im=0):
-        if isnumber(real) is False or isnumber(im) is False:
+        if isrealnumber(real) is False or isrealnumber(im) is False:
             raise TypeError('Invalid argument.')
         self.real = real
         self.im = im
@@ -33,7 +39,7 @@ class Complex:
             new_real = (self.real * other.real) - (self.im * other.im)
             self.im = (self.real * other.im) + (self.im * other.real)
             self.real = new_real
-        elif isnumber(other):
+        elif isrealnumber(other):
             self.real *= other
             self.im *= other
         else:
@@ -48,7 +54,7 @@ class Complex:
             new_real = (self.real * other.real + self.im * other.im) / d
             self.im = (self.im * other.real - self.real * other.im) / d
             self.real = new_real
-        elif isnumber(other):
+        elif isrealnumber(other):
             self.real /= other
             self.im /= other
         else:
@@ -69,12 +75,19 @@ class Complex:
         if isinstance(other, Complex):
             real = (self.real * other.real) - (self.im * other.im)
             im = (self.real * other.im) + (self.im * other.real)
-        elif isnumber(other):
+        elif isrealnumber(other):
             real = self.real * other
             im = self.im * other
         else:
             raise TypeError('Invalid type')
         return Complex(real=real, im=im)
+
+    def __rtruediv__(self, other):
+        if isinstance(other, Complex):
+            return other.__truediv__(self)
+        if isrealnumber(other):
+            return Complex(real=other).__truediv__(self)
+        raise TypeError('Invalid type')
 
     def __truediv__(self, other):
         if isinstance(other, Complex):
@@ -83,7 +96,7 @@ class Complex:
                 raise ValueError('Division by 0')
             real = (self.real * other.real + self.im * other.im) / d
             im = (self.im * other.real - self.real * other.im) / d
-        elif isnumber(other):
+        elif isrealnumber(other):
             real = self.real / other
             im = self.im / other
         else:
@@ -91,16 +104,18 @@ class Complex:
         return Complex(real=real, im=im)
 
     def __eq__(self, other):
-        if isinstance(other, Complex) is False:
-            raise TypeError('only Complex')
-        return (self.real == other.real) and (self.im == other.im)
-        
+        if isinstance(other, Complex) is True:
+            return (self.real == other.real) and (self.im == other.im)
+        if isrealnumber(other):
+            if self.im == 0 and self.real == other:
+                return True
+        return False
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __str__(self):
-        if self.im < 0:
+        if self.im >= 0:
             return "{real} + {im}i".format(real=self.real, im=self.im)
         else:
             return "{real} - {im}i".format(real=self.real, im=abs(self.im))
