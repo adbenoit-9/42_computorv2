@@ -39,7 +39,7 @@ def get_value(val, data):
     except:
         if val in data.keys():
             return data[val]
-        # check if complex, else undified var
+        # check if complex, else undefined var
         
 
 def do_operation(data, x1, x2, op):
@@ -62,7 +62,7 @@ def do_operation(data, x1, x2, op):
 
 def parse_value(data, value):
     val = ""
-    expr = re.split('()', value) # prob if (())
+    expr = re.split('()', value) # not solution: prob if (())
     result = [{'value': 0,
                 'op': "" }] * len(expr)
     for i, value in enumerate(expr):

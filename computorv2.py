@@ -1,5 +1,5 @@
 import sys
-from parsing import parse_cmd
+from parse_cmd import parse_cmd
 
 def cli(data, cmd):
     cmd = cmd.split('=')
