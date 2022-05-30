@@ -1,5 +1,5 @@
 import sys
-from parse_cmd import parse_cmd
+from parse_cmd import parse_cmd, set_priority
 
 def cli(data, cmd):
     cmd = cmd.split('=')
@@ -14,14 +14,15 @@ def cli(data, cmd):
 
 
 if __name__ == "__main__":
-    cmd_list = []
-    data = {}
-    while True:
-        cmd = input('> ')
-        cmd_list.append(cmd)
-        if cmd == "quit":
-            break
-        try:
-            data = cli(data, cmd)
-        except Exception as err:
-            print(err)
+    print(set_priority(sys.argv[1]))
+    # cmd_list = []
+    # data = {}
+    # while True:
+    #     cmd = input('> ')
+    #     cmd_list.append(cmd)
+    #     if cmd == "quit":
+    #         break
+    #     try:
+    #         data = cli(data, cmd)
+    #     except Exception as err:
+    #         print(err)

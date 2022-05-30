@@ -60,6 +60,26 @@ def do_operation(data, x1, x2, op):
     else:
         raise ValueError('parse error: operation invalid')
 
+def set_priority(value):
+    # print(value)
+    ret = []
+    begin = 0
+    state = 0
+    value = value.strip()
+    for i, c in enumerate(value):
+        if c in "-+" and state == 0 and i != 0:
+            print(value[i:])
+            ret.append(set_priority(value[begin:i]))
+            begin = i + 1
+        if c == "(":
+            state += 1
+        if c == ")":
+            state -= 1
+    ret.append(value[begin:])
+    # print(ret)
+    return ret
+
+
 def parse_value(data, value):
     val = ""
     expr = re.split('()', value) # not solution: prob if (())
@@ -69,7 +89,7 @@ def parse_value(data, value):
         state = State.BEGIN
         value = value.strip()
         for j, c in enumerate(value):
-            if c in "+-*/%^ ": # prob priority on mul div and mod
+            if c in "+-*/%^ ": # prob priority on mul, div and mod
                 val = get_value(data, val)
                 result[i].val = do_operation(result[i], val, op)
                 state = State.GET_OP
