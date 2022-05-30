@@ -8,7 +8,7 @@ def cli(data, cmd):
     elif len(cmd) == 2:
         result = parse_cmd(data, cmd)
     else:
-        result = 'parse error'
+        raise ValueError('parse error')
     print(result)
     return data
 
@@ -21,4 +21,7 @@ if __name__ == "__main__":
         cmd_list.append(cmd)
         if cmd == "quit":
             break
-        data = cli(data, cmd)
+        try:
+            data = cli(data, cmd)
+        except Exception as err:
+            print(err)

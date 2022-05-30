@@ -103,6 +103,14 @@ class Complex:
             raise TypeError('Invalid type')
         return Complex(real=real, im=im)
 
+    def __pow__(self, n):
+        if isrealnumber(n) is False:
+            raise ValueError('Invalid type')
+        res = self.copy()
+        for i in range(n - 1):
+            res *= self
+        return res
+
     def __eq__(self, other):
         if isinstance(other, Complex) is True:
             return (self.real == other.real) and (self.im == other.im)
