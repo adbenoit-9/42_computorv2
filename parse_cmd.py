@@ -26,9 +26,20 @@ class str_type:
 class State:
     ERROR = -1,
     BEGIN = 0,
-    GET_NUM = 1,
-    GET_VAR = 2,
+    GET_VAL = 2,
     GET_OP = 3
+
+
+def get_value(val, data):
+    try:
+        nb = float(val)
+        if nb.is_integer():
+            return int(nb)
+        return nb
+    except:
+        if val in data.keys():
+            return data[val]
+        
 
 def do_operation(data, x1, x2, op):
     if op == '+':
@@ -43,11 +54,13 @@ def do_operation(data, x1, x2, op):
         return x1 % x2
     elif op == '^':
         return x1 ** x2
+    elif op == '**':
+        return x1 * x2
+    else:
+        raise ValueError('parse error: operation invalid')
 
 def parse_value(data, value):
-    nb = ""
-    ret = 0
-    var_name = ""
+    val = ""
     expr = re.split('()', value)
     result = [{'value': 0,
                 'op': "" }] * len(expr)
@@ -55,20 +68,16 @@ def parse_value(data, value):
         state = State.BEGIN
         value = value.strip()
         for j, c in enumerate(value):
-            if c in "0123456789.":
-                state = State.GET_NUM
-                val += c
-            elif c in "+-*/%^":
-                val = get_value(val, state)
-                do_operation(result[i], val, op)
+            if c in "+-*/%^ ":
+                val = get_value(data, val)
+                result[i].val = do_operation(result[i], val, op)
                 state = State.GET_OP
                 val = ""
-                op = c
-                result[i]
-            elif c == ' ':
-                continue
+                if c != ' ':
+                    op += c
             else:
-                state = State.GET_VAR
+                op = ""
+                state = State.GET_VAL
                 val += c
         if state == State.GET_OP:
             result[i].op = op

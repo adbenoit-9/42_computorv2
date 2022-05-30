@@ -2,7 +2,7 @@ stockage data: `dictionary`
 
 Class:
 - [x] Complex : projet matrix
-- [ ] Matrix : piscine python vector
+- [x] Matrix : piscine python vector
 - [ ] Function : decomposition ?
 
 - [ ] equation : computorv1 => racine fonction

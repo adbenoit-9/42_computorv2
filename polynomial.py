@@ -1,6 +1,7 @@
 from parse_polynomial import parse_polynomial
 import math
 
+
 def common_denominator(x, y):
     if x.is_integer() and y.is_integer():
         n = min(abs(int(x)), abs(int(y)))
@@ -88,7 +89,8 @@ class Polynomial:
     def negative_delta_step(self, delta):
         form1 = "x{k} = ({b} {sign} i * sqrt({delta})) / (2 * {a})"
         form2 = "x{k} = ({b} {sign} i * sqrt({delta})) / {denom}"
-        form3 = "x{k} = ({b} {sign} i * {sqrt_delta}) / {denom}"
+        form3 = "x{k} = {b} / {d1} {sign} i * sqrt({delta}) / {d2}"
+        form4 = "x{k} = {b} / {d1} {sign} i * {sqrt_delta} / {d2}"
         for i in range(2):
             data = {
                 'k': i + 1,
@@ -96,11 +98,26 @@ class Polynomial:
                 'sign': '-' if i == 0 else '+',
                 'delta': -delta,
                 'sqrt_delta': math.sqrt(-delta),
-                'a': self.values[2]
+                'a': self.values[2],
+                'denom': 2 * self.values[2]
             }
             print(form1.format(**data))
-            print(form2.format(**data, denom=2 * data['a']))
-            print(form3.format(**data, denom=2 * data['a']))
+            print(form2.format(**data))
+            ret, k = common_denominator(float(data['b']), float(data['denom']))
+            d1 = data['denom']
+            d2 = data['denom']
+            if ret is True:
+                data['b'] /= k
+                d1 /= k
+            ret2, k2 = common_denominator(float(data['sqrt_delta']), float(data['denom']))
+            if ret2 is True:
+                data['sqrt_delta'] /= k2
+                d2 /= k2
+                print(form4.format(**data, d1=d1, d2=d2))
+            else:
+                print(form3.format(**data, d1=d1, d2=d2))
+
+
             if i == 0:
                 print('')
 
