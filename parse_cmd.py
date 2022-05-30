@@ -39,6 +39,7 @@ def get_value(val, data):
     except:
         if val in data.keys():
             return data[val]
+        # check if complex, else undified var
         
 
 def do_operation(data, x1, x2, op):
@@ -61,14 +62,14 @@ def do_operation(data, x1, x2, op):
 
 def parse_value(data, value):
     val = ""
-    expr = re.split('()', value)
+    expr = re.split('()', value) # prob if (())
     result = [{'value': 0,
                 'op': "" }] * len(expr)
     for i, value in enumerate(expr):
         state = State.BEGIN
         value = value.strip()
         for j, c in enumerate(value):
-            if c in "+-*/%^ ":
+            if c in "+-*/%^ ": # prob priority on mul div and mod
                 val = get_value(data, val)
                 result[i].val = do_operation(result[i], val, op)
                 state = State.GET_OP
