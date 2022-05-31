@@ -2,8 +2,8 @@ stockage data: `dictionary`
 
 # TO DO
 - Class:
-    - [x] Complex : projet matrix
-    - [x] Matrix : piscine python vector
+    - [x] Complex
+    - [x] Matrix
     - [x] Function
 
 - function: handle not real var ? je ne pense pas
