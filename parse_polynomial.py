@@ -7,33 +7,33 @@ class State:
     GET_POWER = 4
 
 
-def parse_power(values, x, state, val, side):
+def parse_power(coefs, x, state, val, side):
     if state != State.GET_VALUE and state != State.GET_POWER \
             and state != State.BEGIN:
-        return State.ERROR, values, val
+        return State.ERROR, coefs, val
     if state != State.GET_POWER:
         val *= side
     if x.startswith('X^'):
-        values[int(x[2:])] += val
+        coefs[int(x[2:])] += val
     elif x == 'X':
-        values[1] += val
+        coefs[1] += val
     else:
-        return State.ERROR, values, val
+        return State.ERROR, coefs, val
     val = 1.
-    return State.GET_SIGN, values, val
+    return State.GET_SIGN, coefs, val
 
 
-def parse_sign(values, sign, state, val):
+def parse_sign(coefs, sign, state, val):
     if state == State.GET_MUL:
-        values[0] += val
+        coefs[0] += val
         val = 1.
     elif state != State.GET_SIGN and state != State.BEGIN:
-        return State.ERROR, values, val
+        return State.ERROR, coefs, val
     if sign == '-':
         val *= -1
     elif sign != '+':
-        return State.ERROR, values, val
-    return State.GET_VALUE, values, val
+        return State.ERROR, coefs, val
+    return State.GET_VALUE, coefs, val
 
 
 def parse_value(x, state, val, side):
@@ -44,13 +44,13 @@ def parse_value(x, state, val, side):
     return State.GET_MUL, val
 
 
-def parse_equal(values, x, state, val, side):
+def parse_equal(coefs, x, state, val, side):
     if state == State.GET_MUL:
-        values[0] += val
+        coefs[0] += val
         val = 1.
     elif state != State.GET_SIGN or side == -1:
-        return State.ERROR, values, val, side
-    return State.BEGIN, values, val, -1
+        return State.ERROR, coefs, val, side
+    return State.BEGIN, coefs, val, -1
 
 
 def fix_polynomial(eq):
@@ -83,14 +83,14 @@ def parse_polynomial(polynomial):
             n = int(x[2:])
         elif x == 'X' and n < 1:
             n = 1
-    values = [0] * (n + 1)
+    coefs = [0] * (n + 1)
     for x in split_p:
         if x == '=':
-            state, values, val, side = parse_equal(values, x, state, val, side)
+            state, coefs, val, side = parse_equal(coefs, x, state, val, side)
         elif x.startswith('X'):
-            state, values, val = parse_power(values, x, state, val, side)
+            state, coefs, val = parse_power(coefs, x, state, val, side)
         elif x in '+-':
-            state, values, val = parse_sign(values, x, state, val)
+            state, coefs, val = parse_sign(coefs, x, state, val)
         elif x == '*' and state == State.GET_MUL:
             state = State.GET_POWER
         else:
@@ -98,10 +98,10 @@ def parse_polynomial(polynomial):
         if state == State.ERROR:
             return None
     if state == State.GET_MUL:
-        values[0] += val
+        coefs[0] += val
     elif state != State.GET_SIGN or side != -1:
         return None
-    for i in range(len(values)):
-        if isinstance(values[i], float) and values[i].is_integer():
-            values[i] = int(values[i])
-    return values
+    for i in range(len(coefs)):
+        if isinstance(coefs[i], float) and coefs[i].is_integer():
+            coefs[i] = int(coefs[i])
+    return coefs

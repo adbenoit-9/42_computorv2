@@ -16,61 +16,54 @@ def pgcd(x, y):
 
 
 class Polynomial:
-    def __init__(self, polynomial) -> None:
+    def __init__(self, polynomial, unknown='x') -> None:
         if isinstance(polynomial, str) is False:
-            raise TypeError("Only str is accepted")
+            raise ValueError("Only str is accepted")
         try:
-            self.values = parse_polynomial(polynomial)
-            if self.values is None:
+            self.coefs = parse_polynomial(polynomial)
+            if self.coefs is None:
                 raise ValueError('Invalid Polynomial')
-            self.degree = len(self.values) - 1
-            while self.values[self.degree] == 0. and self.degree > 0:
+            self.degree = len(self.coefs) - 1
+            while self.coefs[self.degree] == 0. and self.degree > 0:
                 self.degree -= 1
-        except Exception:
+            self.unknown = unknown
+        except ValueError:
             raise ValueError('Invalid Polynomial')
 
     def reduce_form(self):
         return self.__str__()
 
     def null_delta_step(self):
-        form1 = "x = {b} / (2 * {a})"
-        form2 = "x = {num} / {denom}"
-        form3 = "x = {result}"
-        b = -self.values[1]
-        print(form1.format(a=self.values[2], b=b))
-        denom = 2 * self.values[2]
-        print(form2.format(num=b, denom=denom))
+        form2 = "{unkown} = {num} / {denom}"
+        form3 = "{unkown} = {result}"
+        b = -self.coefs[1]
+        denom = 2 * self.coefs[2]
+        print(form2.format(unknown=self.unknown, num=b, denom=denom))
         ret, k = pgcd(denom, b)
         if ret is True:
             b = int(b / k)
             denom = int(denom / k)
-            print(form2.format(num=b, denom=denom))
+            if denom != 1:
+                print(form2.format(unknown=self.unknown, num=b, denom=denom))
         result = b / denom
         if result.is_integer():
             result = int(result)
         print(form3.format(result=result))
 
     def positive_delta_step(self, delta):
-        form1 = "x{k} = ({b} {sign} sqrt({delta})) / (2 * {a})"
-        form2 = "x{k} = ({b} {sign} sqrt({delta})) / {denom}"
-        form3 = "x{k} = ({b} {sign} {sqrt_delta}) / {denom}"
-        form4 = "x{k} = {num} / {denom}"
-        form5 = "x{k} = {result}"
+        form4 = "{unkown}{k} = {num} / {denom}"
+        form5 = "{unkown}{k} = {result}"
         for i in range(2):
             data = {
                 'k': i + 1,
-                'b': -self.values[1],
+                'b': -self.coefs[1],
                 'sign': '-' if i == 0 else '+',
                 'delta': delta,
                 'sqrt_delta': math.sqrt(delta),
-                'a': self.values[2]
+                'a': self.coefs[2],
+                'unknown': self.unknown
             }
-            print(form1.format(**data))
             denom = 2 * data['a']
-            if isinstance(data['sqrt_delta'], float):
-                print(form2.format(**data, denom=denom))
-            else:
-                print(form3.format(**data, denom=denom))
             if i == 0:
                 num = data['b'] - data['sqrt_delta']
             else:
@@ -82,7 +75,8 @@ class Polynomial:
             if ret is True:
                 num = int(num / k)
                 denom = int(denom / k)
-                print(form4.format(k=data['k'], num=num, denom=denom))
+                if denom != 1:
+                    print(form4.format(k=data['k'], num=num, denom=denom))
             result = num / denom
             if result.is_integer():
                 result = int(result)
@@ -91,22 +85,19 @@ class Polynomial:
                 print('')
 
     def negative_delta_step(self, delta):
-        form1 = "x{k} = ({b} {sign} i * sqrt({delta})) / (2 * {a})"
-        form2 = "x{k} = ({b} {sign} i * sqrt({delta})) / {denom}"
-        form3 = "x{k} = {b} / {d1} {sign} i * sqrt({delta}) / {d2}"
-        form4 = "x{k} = {b} / {d1} {sign} i * {sqrt_delta} / {d2}"
+        form3 = "{unkown}{k} = {b} / {d1} {sign} i * sqrt({delta}) / {d2}"
+        form4 = "{unkown}{k} = {b} / {d1} {sign} i * {sqrt_delta} / {d2}"
         for i in range(2):
             data = {
                 'k': i + 1,
-                'b': -self.values[1],
+                'b': -self.coefs[1],
                 'sign': '-' if i == 0 else '+',
                 'delta': -delta,
                 'sqrt_delta': math.sqrt(-delta),
-                'a': self.values[2],
-                'denom': 2 * self.values[2]
+                'a': self.coefs[2],
+                'denom': 2 * self.coefs[2],
+                'unknown': self.unknown
             }
-            print(form1.format(**data))
-            print(form2.format(**data))
             ret, k = pgcd(data['b'], data['denom'])
             d1 = data['denom']
             d2 = data['denom']
@@ -145,29 +136,29 @@ class Polynomial:
             print("The polynomial degree is strictly greater than 2, I can't solve.")
             return False
         elif self.degree == 0:
-            if self.values[0] != 0.:
+            if self.coefs[0] != 0.:
                 print("No solution.")
             else:
                 print('Each real number is a solution.')
             return True
         elif self.degree == 1:
             print("The solution is:")
-            b = -self.values[0]
-            denom = self.values[1]
+            b = -self.coefs[0]
+            denom = self.coefs[1]
             x = b / denom
             ret, k = pgcd(denom, b)
-            print("x = {} / {}".format(-self.values[0], self.values[1]))
             if ret is True:
                 b = int(b / k)
                 denom = int(denom / k)
-                print("x = {} / {}".format(x))
-            print("x = {}".format(x))
+                if denom != 1:
+                    print("{} = {} / {}".format(self.unknown, x))
+            print("{} = {}".format(self.unknown, x))
             return True
-        delta = self.values[1] * self.values[1] - 4 * \
-            self.values[2] * self.values[0]
-        print("Δ = {}^2 - 4 * {} * {} = {}\n".format(self.values[1],
-                                                     self.values[2],
-                                                     self.values[0],
+        delta = self.coefs[1] * self.coefs[1] - 4 * \
+            self.coefs[2] * self.coefs[0]
+        print("Δ = {}^2 - 4 * {} * {} = {}\n".format(self.coefs[1],
+                                                     self.coefs[2],
+                                                     self.coefs[0],
                                                      delta))
         self.show_step(delta)
         return True
@@ -179,9 +170,9 @@ class Polynomial:
     def __str__(self):
         polynomial = ""
         for i in range(self.degree + 1):
-            op = '-' if self.values[i] < 0 else '+'
+            op = '-' if self.coefs[i] < 0 else '+'
             if i != 0 or op == '-':
                 polynomial += "{} ".format(op)
-            polynomial += "{} * X^{} ".format(abs(self.values[i]), i)
+            polynomial += "{} * X^{} ".format(abs(self.coefs[i]), i)
         polynomial += "= 0"
         return polynomial
