@@ -6,12 +6,12 @@ stockage data: `dictionary`
     - [x] Matrix
     - [x] Function
 
-- function: handle not real var ? je ne pense pas
+- function
     - [x] equation syntax
     - [ ] resolve
         - [x] y is real
         - [ ] y is complex
-        - [ ] y is matrix
+        - [ ] y is matrix: error
         - [x] replace X by the parameter name
     - [ ] calculate image
         - [x] x is real
@@ -27,7 +27,7 @@ stockage data: `dictionary`
     - [ ] matrix type
     - [ ] function type
     - [ ] complex type
-    - [ ] decomposition
+    - [ ] decomposition: pas sure que ca soit la bonne solution
 
 - priority:
     - [x] mul/div/mod
@@ -35,8 +35,8 @@ stockage data: `dictionary`
 
 - [x] exit program : quit and CTRL+D
 
-- not handle:
-    - 7 * x * 6 (but 7 * 6 * x yes)
+- to handle:
+    - [ ] 7 * x * 6
 
 ---
 # example
