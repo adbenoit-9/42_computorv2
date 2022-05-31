@@ -108,16 +108,18 @@ class Polynomial:
             d2 = data['denom']
             if ret is True:
                 data['b'] /= k
+                data['b'] = int(data['b'])
                 d1 /= k
+                d1 = int(d1)
             ret2, k2 = common_denominator(float(data['sqrt_delta']), float(data['denom']))
             if ret2 is True:
                 data['sqrt_delta'] /= k2
+                data['sqrt_delta'] = int(data['sqrt_delta'])
                 d2 /= k2
+                d2 = int(d2)
                 print(form4.format(**data, d1=d1, d2=d2))
             else:
                 print(form3.format(**data, d1=d1, d2=d2))
-
-
             if i == 0:
                 print('')
 

@@ -102,6 +102,6 @@ def parse_polynomial(polynomial):
     elif state != State.GET_SIGN or side != -1:
         return None
     for i in range(len(values)):
-        if values[i].is_integer():
+        if isinstance(values[i], float) and values[i].is_integer():
             values[i] = int(values[i])
     return values
