@@ -42,7 +42,10 @@ def calculate(parser, cmd, data):
         else:
             if name not in data.keys():
                 raise ValueError("(CLI) Function '{}' not defined".format(name))
-            result = data[name].image(param)
+            if param in data.keys():
+                result = data[name].image(data[param])
+            else:
+                result = data[name].image(param)
     else:
         result = parser.start(cmd, 'var')
     return result
@@ -67,14 +70,14 @@ def cli(data, cmd):
         if param is None:
             for i in name:
                 if i in string.punctuation:
-                    raise ValueError("(CLI) function parameter '{}' is invalid")
+                    raise ValueError("(CLI) function parameter '{}' is invalid".format(param))
             if name == "i":
-                raise ValueError("(CLI) function parameter '{}' is invalid")
+                raise ValueError("(CLI) function parameter '{}' is invalid".format(param))
             data[name] = parser.start(expr, 'var')
         else:
             for i in param:
                 if i in string.punctuation:
-                    raise ValueError("(CLI) function parameter '{}' is invalid")
+                    raise ValueError("(CLI) function parameter '{}' is invalid".format(param))
             data[name] = parser.start(expr, 'funct', param)
         result = data[name]
     else:

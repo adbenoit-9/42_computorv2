@@ -34,25 +34,26 @@ class Polynomial:
         return self.__str__()
 
     def null_delta_step(self):
-        form2 = "{unkown} = {num} / {denom}"
-        form3 = "{unkown} = {result}"
+        form2 = "{unknown} = {num} / {denom}"
+        form3 = "{unknown} = {result}"
         b = -self.coefs[1]
         denom = 2 * self.coefs[2]
-        print(form2.format(unknown=self.unknown, num=b, denom=denom))
         ret, k = pgcd(denom, b)
         if ret is True:
             b = int(b / k)
             denom = int(denom / k)
-            if denom != 1:
+            if denom != 1 and b != 0:
                 print(form2.format(unknown=self.unknown, num=b, denom=denom))
+        elif denom != 1 and b != 0:
+            print(form2.format(unknown=self.unknown, num=b, denom=denom))
         result = b / denom
         if result.is_integer():
             result = int(result)
-        print(form3.format(result=result))
+        print(form3.format(unknown=self.unknown, result=result))
 
     def positive_delta_step(self, delta):
-        form4 = "{unkown}{k} = {num} / {denom}"
-        form5 = "{unkown}{k} = {result}"
+        form4 = "{unknown}{k} = {num} / {denom}"
+        form5 = "{unknown}{k} = {result}"
         for i in range(2):
             data = {
                 'k': i + 1,
@@ -75,8 +76,10 @@ class Polynomial:
             if ret is True:
                 num = int(num / k)
                 denom = int(denom / k)
-                if denom != 1:
+                if denom != 1 and num != 0:
                     print(form4.format(k=data['k'], num=num, denom=denom))
+            elif denom != 1 and num != 0:
+                print(form4.format(k=data['k'], num=num, denom=denom))
             result = num / denom
             if result.is_integer():
                 result = int(result)
@@ -85,8 +88,8 @@ class Polynomial:
                 print('')
 
     def negative_delta_step(self, delta):
-        form3 = "{unkown}{k} = {b} / {d1} {sign} i * sqrt({delta}) / {d2}"
-        form4 = "{unkown}{k} = {b} / {d1} {sign} i * {sqrt_delta} / {d2}"
+        form3 = "{unknown}{k} = {b} / {d1} {sign} i * sqrt({delta}) / {d2}"
+        form4 = "{unknown}{k} = {b} / {d1} {sign} i * {sqrt_delta} / {d2}"
         for i in range(2):
             data = {
                 'k': i + 1,
@@ -122,13 +125,13 @@ class Polynomial:
         if isinstance(delta, float) and delta.is_integer():
             delta = int(delta)
         if delta > 0:
-            print("Discriminant is strictly positive, the two solutions are:")
+            print("Two solutions in R:")
             self.positive_delta_step(delta)
         elif delta < 0:
-            print('Discriminant is strictly negative, the two solutions are:')
+            print("Two solutions in C:")
             self.negative_delta_step(delta)
         else:
-            print("Discriminant equal to zero, the solution is:")
+            print("One solution in R:")
             self.null_delta_step()
 
     def resolve(self):
@@ -150,16 +153,14 @@ class Polynomial:
             if ret is True:
                 b = int(b / k)
                 denom = int(denom / k)
-                if denom != 1:
-                    print("{} = {} / {}".format(self.unknown, x))
+                if denom != 1 and b != 0:
+                    print("{} = {} / {}".format(self.unknown, b, denom))
+            elif denom != 1 and b != 0:
+                print("{} = {} / {}".format(self.unknown, b, denom))
             print("{} = {}".format(self.unknown, x))
             return True
         delta = self.coefs[1] * self.coefs[1] - 4 * \
             self.coefs[2] * self.coefs[0]
-        print("Δ = {}^2 - 4 * {} * {} = {}\n".format(self.coefs[1],
-                                                     self.coefs[2],
-                                                     self.coefs[0],
-                                                     delta))
         self.show_step(delta)
         return True
 

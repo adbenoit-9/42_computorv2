@@ -3,7 +3,6 @@ from function import Function
 
 class Parser:
     '''Parse a mathematic expression.'''
-
     ERROR = -1,
     BEGIN = 0,
     MUL = 1,
@@ -18,8 +17,9 @@ class Parser:
         self.state = None
         self.type = None
         self.data = data
+        self.param = None
 
-    def start(self, expr, expr_type, param='x'):
+    def start(self, expr, expr_type, param=None):
         type_list = ['function', 'f', 'funct', 'variable', 'var', 'v']
         if isinstance(expr, str) is False or \
                 isinstance(expr_type, str) is False or \
@@ -27,6 +27,7 @@ class Parser:
             raise ValueError('Parser: invalid argument')
         self.state = self.BEGIN
         self.type = expr_type
+        self.param = param
         self.tokens = self.translate(expr)
         if expr_type in type_list[:3]:
             return Function(self.tokens, self.data, param)
@@ -44,41 +45,49 @@ class Parser:
 
     def translate(self, expr):
         new_expr = ""
-        sign = 1
-        tmp = 0
-        x = ""
-        op = ""
-        for i, c in enumerate(expr):
-            if c == '-':
-                sign *= -1
-                val = self.get_value(x)
-                x = ""
-                new_expr += self.format_val(val, len(new_expr))
-            elif c == '+':
-                val = self.get_value(x)
-                x = ""
-                new_expr += self.format_val(val, len(new_expr))
-            elif c in "*/%^":
-                if len(x):
-                    x = self.get_value(x) * sign
-                    sign = 1
-                    if len(op):
-                        val = self.do_operation(tmp, x, op)
+        tokens = self.split(expr, '+-')
+        for token in tokens:
+            sign = 1
+            tmp = 0
+            x = ""
+            op = ""
+            for i, c in enumerate(token):
+                if c == '-':
+                    sign *= -1
+                elif c == '+':
+                    continue
+                elif c in "*/%^":
+                    if len(x):
+                        x = self.get_value(x)
+                        if isinstance(x, str) is False:
+                            x *= sign
+                        elif sign == -1:
+                            x = '- ' + x
+                        elif len(new_expr) != 0:
+                            x = '+ ' + x
+                        sign = 1
+                        if len(op):
+                            val = self.do_operation(val, x, op)
+                        else:
+                            val = x
+                        x = ""
+                        op = c
                     else:
-                        tmp = x
-                    x = ""
-                    op = c
+                        op += c
                 else:
-                    op += c
-            elif c != '+':
-                x += c
-        x = self.get_value(x) * sign
-        if len(op):
-            val = self.do_operation(tmp, x, op)
-        else:
-            val = x
-        new_expr += self.format_val(val, len(new_expr))
-        print(new_expr)
+                    x += c
+            x = self.get_value(x)
+            if isinstance(x, str) is False:
+                x *= sign
+            elif sign == -1:
+                x = '- ' + x
+            elif len(new_expr) != 0:
+                x = '+ ' + x
+            if len(op):
+                val = self.do_operation(val, x, op)
+            else:
+                val = x
+            new_expr += self.format_val(val, len(new_expr))
         return new_expr
 
     def calculate(self):
@@ -95,7 +104,7 @@ class Parser:
     # UTILS
 
     def get_value(self, x):
-        if x in self.data.keys():
+        if x in self.data.keys() and (self.param is None or x != self.param):
             return self.data[x]
         try:
             x = float(x)
@@ -120,13 +129,28 @@ class Parser:
             tokens.append(string[tmp:])
         return tokens
 
-    def do_operation(self, x1, x2, op, len):
-            
+    def do_operation(self, x1, x2, op):
+        if isinstance(x1, str) and op == "^":
+            i = 0
+            sign = ''
+            if x1[0] in '+-':
+                i = 2
+                sign = x1[:2]
+            return "{}{}^{}".format(sign, x1[i:], x2)
         if isinstance(x1, str):
-            if len > 0 and :
-            return "{} {} {}".format(abs(x2), op, x1)
+            i = 0
+            sign = ''
+            if x1[0] in '+-':
+                i = 2
+                sign = x1[:2]
+            return "{}{} {} {}".format(sign, abs(x2), op, x1[i:])
         elif isinstance(x2, str):
-            return "{} {} {}".format(abs(x1), op, x2)
+            i = 0
+            sign = ''
+            if x2[0] in '+-':
+                i = 2
+                sign = x2[:2]
+            return "{}{} {} {}".format(sign, abs(x1), op, x2[i:])
         if op == '+':
             result = x1 + x2
         elif op == '-':
@@ -144,5 +168,4 @@ class Parser:
             result = x1 * x2
         else:
             raise ValueError('Parser: invalid operation ')
-        print('operation : {} {} {} = {}'.format(x1, op, x2, result))
         return result

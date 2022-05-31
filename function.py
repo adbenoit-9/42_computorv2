@@ -30,7 +30,7 @@ class Function:
         '''
         Resolves f(x) = y
         '''
-        print('{} = {}', self.expr, y)
+        print('{} = {}'.format(self.expr, y))
         eq = Polynomial('{} = {}'.format(self.expr.replace(self.unknown, 'X'), y), self.unknown)
         eq.resolve()
     
