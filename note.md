@@ -1,12 +1,12 @@
 stockage data: `dictionary`
 
 # TO DO
-- [x] Class:
+- Class:
     - [x] Complex : projet matrix
     - [x] Matrix : piscine python vector
     - [x] Function
 
-- [ ] function: handle not real var ? je ne pense pas
+- function: handle not real var ? je ne pense pas
     - [x] equation syntax
     - [ ] resolve
         - [x] y is real
@@ -19,7 +19,7 @@ stockage data: `dictionary`
         - [ ] x is matrix
     - [x] handle var
 
-- [ ] expression:
+- expression:
     - [x] name format
     - [x] replace var in simple calcul
     - [x] replace var in function
@@ -29,7 +29,7 @@ stockage data: `dictionary`
     - [ ] complex type
     - [ ] decomposition
 
-- [ ] priority:
+- priority:
     - [x] mul/div/mod
     - [ ] bracket
 
