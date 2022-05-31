@@ -30,7 +30,7 @@ class Parser:
         while self.state != self.END:
             new_tokens = []
             for i, token in enumerate(self.tokens):
-                new_tokens.append(self.priority(token))
+                new_tokens.append(self.decompose(token))
             self.tokens = new_tokens
 
     def split(self, string, sep, rm_sep=0):

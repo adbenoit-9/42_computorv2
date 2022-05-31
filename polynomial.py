@@ -2,11 +2,15 @@ from parse_polynomial import parse_polynomial
 import math
 
 
-def common_denominator(x, y):
+def pgcd(x, y):
+    x = float(x)
+    y = float(y)
     if x.is_integer() and y.is_integer():
         n = min(abs(int(x)), abs(int(y)))
         for i in range(n, 1, -1):
             if x % i == 0 and y % i == 0:
+                if x < 0 and y < 0:
+                    return True, -i
                 return True, i
     return False, 1
 
@@ -36,7 +40,7 @@ class Polynomial:
         print(form1.format(a=self.values[2], b=b))
         denom = 2 * self.values[2]
         print(form2.format(num=b, denom=denom))
-        ret, k = common_denominator(float(denom), float(b))
+        ret, k = pgcd(denom, b)
         if ret is True:
             b = int(b / k)
             denom = int(denom / k)
@@ -74,7 +78,7 @@ class Polynomial:
             if isinstance(num, int) or num.is_integer():
                 num = int(num)
                 print(form4.format(k=data['k'], num=num, denom=denom))
-            ret, k = common_denominator(float(denom), float(num))
+            ret, k = pgcd(denom, num)
             if ret is True:
                 num = int(num / k)
                 denom = int(denom / k)
@@ -103,7 +107,7 @@ class Polynomial:
             }
             print(form1.format(**data))
             print(form2.format(**data))
-            ret, k = common_denominator(float(data['b']), float(data['denom']))
+            ret, k = pgcd(data['b'], data['denom'])
             d1 = data['denom']
             d2 = data['denom']
             if ret is True:
@@ -111,7 +115,7 @@ class Polynomial:
                 data['b'] = int(data['b'])
                 d1 /= k
                 d1 = int(d1)
-            ret2, k2 = common_denominator(float(data['sqrt_delta']), float(data['denom']))
+            ret2, k2 = pgcd(data['sqrt_delta'], data['denom'])
             if ret2 is True:
                 data['sqrt_delta'] /= k2
                 data['sqrt_delta'] = int(data['sqrt_delta'])
@@ -151,7 +155,7 @@ class Polynomial:
             b = -self.values[0]
             denom = self.values[1]
             x = b / denom
-            ret, k = common_denominator(float(denom), float(b))
+            ret, k = pgcd(denom, b)
             print("x = {} / {}".format(-self.values[0], self.values[1]))
             if ret is True:
                 b = int(b / k)
@@ -178,6 +182,6 @@ class Polynomial:
             op = '-' if self.values[i] < 0 else '+'
             if i != 0 or op == '-':
                 polynomial += "{} ".format(op)
-            polynomial += "{} * X^{} ".format(ft_abs(self.values[i]), i)
+            polynomial += "{} * X^{} ".format(abs(self.values[i]), i)
         polynomial += "= 0"
         return polynomial
