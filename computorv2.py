@@ -55,14 +55,14 @@ def cli(data, cmd):
     cmd = cmd.split('=')
     parser = Parser(data)
     if len(cmd) == 1 or cmd[1] == '?':
-        result = calculate(parser, cmd, data)
+        result = parser.start(cmd[0], 'var')
     elif cmd[1].endswith('?'):
         name, param = isfunction(cmd[0])
         if param == None:
             raise ValueError('Invalid command line')
         if name not in data.keys():
-                raise ValueError("Function '{}' not defined".format(name))
-        data[name].resolve(cmd[1][:-1])
+            raise ValueError("Function '{}' not defined".format(name))
+        data[name].resolve(cmd[1][:-1], param)
         return data
     elif len(cmd) == 2:
         name, param = isfunction(cmd[0])
@@ -71,7 +71,7 @@ def cli(data, cmd):
             for i in name:
                 if i in string.punctuation:
                     raise ValueError("function parameter '{}' is invalid".format(param))
-            if name == "i":
+            if name in ['i', 'cos', 'sin', 'tan', 'abs', 'sqrt']:
                 raise ValueError("function parameter '{}' is invalid".format(param))
             data[name] = parser.start(expr, 'var')
         else:
@@ -79,6 +79,7 @@ def cli(data, cmd):
                 if i in string.punctuation:
                     raise ValueError("function parameter '{}' is invalid".format(param))
             data[name] = parser.start(expr, 'funct', param)
+            return data
         result = data[name]
     else:
         raise ValueError('Invalid command line')

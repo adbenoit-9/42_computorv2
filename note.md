@@ -17,6 +17,8 @@ stockage data: `dictionary`
         - [x] x is real
         - [ ] x is complex
         - [ ] x is matrix
+        - [x] x is calc
+        - [x] x formula
     - [x] handle var
 
 - expression:
@@ -62,12 +64,12 @@ data = {
 - facile:
     - [ ] Afficher la liste des variables stockées ainsi que leurs valeurs
     - [ ] Historique des commandes avec résultats (pas fun)
+    - [x] Ajout de fonctions usuelles (exponentielle, racine carrée, valeur absolue, cosinus, sinus, tangente, etc.)
 
 - parsing flemme:
     - [ ] Calcul de norme
     - [ ] Inversion de matrice et d'autres deja fait dans Matrix
     - [ ] Ajout du calcul en radian pour les angles
-    - [ ] Ajout de fonctions usuelles (exponentielle, racine carrée, valeur absolue, cosinus, sinus, tangente, etc.)
 
 - parsing mega flemme:
     - [ ] Composition de fonction

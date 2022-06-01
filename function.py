@@ -11,28 +11,36 @@ class Function:
             zero_polynomial = Polynomial(expr.replace(unknown, 'X') + '= 0', unknown)
         except ValueError:
             raise ValueError('Function: Invalid expression syntax')
-        self.expr = expr
+        print(expr)
         self.coefs = zero_polynomial.coefs
         self.degree = zero_polynomial.degree
         self.unknown = unknown
 
     def image(self, x):
-        try:
-            x = int(x)
-        except Exception:
-            raise ValueError('Function: Invalid number')
+        if isinstance(x, str):
+            self.unknown = x
+            return self
         im = [0] * len(self.coefs)
         for i, coef in enumerate(self.coefs):
             im[i] = coef * (x ** i)
         return sum(im)
 
-    def resolve(self, y):
+    def resolve(self, y, unknown='x'):
         '''
         Resolves f(x) = y
         '''
-        print('{} = {}'.format(self.expr, y))
-        eq = Polynomial('{} = {}'.format(self.expr.replace(self.unknown, 'X'), y), self.unknown)
+        self.unknown = unknown
+        expr = str(self)
+        print('{} = {}'.format(expr, y))
+        eq = Polynomial('{} = {}'.format(expr.replace(self.unknown, 'X'), y), self.unknown)
         eq.resolve()
     
     def __str__(self) -> str:
-        return self.expr
+        expr = ""
+        for i, coef in enumerate(self.coefs):
+            if coef < 0:
+                expr += ' - '
+            elif i != 0:
+                expr += ' + '
+            expr += '{} * {}^{}'.format(coef, self.unknown, i)
+        return expr

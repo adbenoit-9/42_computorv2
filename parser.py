@@ -42,25 +42,43 @@ class Parser:
             result = self.controller(self.format_expr)
             return self.calculate(result)
 
+    def replace_funct(self, expr):
+        math_funct = {
+            'cos': math.cos,
+            'sin': math.sin,
+            'tan': math.tan,
+            'exp': math.exp,
+            'abs': abs,
+            'sqrt': math.sqrt,
+        }
+        matches = re.finditer(r"(?P<name>[\w_]+)[\(](?P<param>[\w\.\[\],;i]+)[\)]", expr)
+        for match in matches:
+            funct = match.group()
+            name = match.group('name')
+            param = self.get_value(match.group('param'))
+            if isinstance(param, str) and self.type == 'funct':
+                continue
+            elif isinstance(param, str):
+                raise ValueError("variable '{}' is undefined.".format(param))
+            if name in math_funct.keys():
+                value = math_funct[name](param)
+            elif name in self.data.keys():
+                value = self.data[name].image(param)
+            elif name not in math_funct:
+                raise ValueError("function '{}' is undefined.".format(name))
+            expr = expr.replace(funct, str(value))
+        return expr
+
     def replace_var(self, expr):
-        matches = re.finditer(r"[\w_\(\)]+", expr)
+        matches = re.finditer(r"[\w_]+", expr)
         new_expr = expr
         for elem in matches:
             var = elem.group()
-            match = re.fullmatch(r"(?P<name>[\w_]+)[\(](?P<param>[\w_]+)[\)]", var)
-            if match is not None:
-                name = match.group('name')
-                param = match.group('param')
-            else:
-                name = var
+            name = var
             if name in self.data.keys():
-                if match is None:
-                    value = str(self.data[name])
-                else:
-                    value = str(self.data[name].image(param))
-                new_expr = new_expr.replace(var, value)
-            elif match is not None:
-                raise ValueError("Function '{}' is undefined.".format(name))
+                value = self.data[name]
+                if isinstance(value, Function) is False:
+                    new_expr = new_expr.replace(var, str(value))
         return new_expr
 
     def calculate_pow(self, expr):
@@ -82,6 +100,7 @@ class Parser:
 
     def format(self, expr):
         expr = self.replace_var(expr)
+        expr = self.replace_funct(expr)
         expr = self.calculate_pow(expr)
         regex = r"[\w\.\^]+([^\w\^\.\(\)\[\],;\-\+]+[\w\.\^]+)*"
         r2 = r"(?P<x1>[\w\.\^]+)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)(?P<x2>[\w\.\^]+)"
@@ -106,7 +125,8 @@ class Parser:
             if unknown is not None:
                 result += unknown
             expr = expr.replace(operation, result)
-        self.rm_useless_brackets(expr)
+        expr = self.replace_funct(expr)
+        expr = self.rm_useless_brackets(expr)
         return self.put_space(expr)
 
     def controller(self, expr):
@@ -115,12 +135,11 @@ class Parser:
         n = len(matches)
         for match in matches:
             result = self.calculate(match.group()[1:-1])
-            expr = expr.replace(match.group(), str(result))
+            expr = expr.replace(match.group(), '({})'.format(result))
             expr = self.format(expr.replace(' ', ''))
-            print(expr)
         if n:
             return self.controller(expr)
-        return expr
+        return self.format(expr.replace(' ', ''))
 
         
     def calculate(self, expr):
