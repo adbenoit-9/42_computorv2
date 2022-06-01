@@ -25,7 +25,7 @@ stockage data: `dictionary`
     - [x] replace var in function
     - [x] real type
     - [ ] matrix type
-    - [ ] function type
+    - [x] function type
     - [ ] complex type
     - [ ] decomposition: pas sure que ca soit la bonne solution
 
@@ -36,7 +36,8 @@ stockage data: `dictionary`
 - [x] exit program : quit and CTRL+D
 
 - to handle:
-    - [ ] 7 * x * 6
+    - [x] 7 * x * 6
+    - [x] x^2^3 => 2 * 3
 
 ---
 # example

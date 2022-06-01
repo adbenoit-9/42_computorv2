@@ -1,5 +1,5 @@
 from function import Function
-
+import re
 
 class Parser:
     '''Parse a mathematic expression.'''
@@ -13,7 +13,7 @@ class Parser:
     END = 10
 
     def __init__(self, data) -> None:
-        self.tokens = None
+        self.expr = None
         self.state = None
         self.type = None
         self.data = data
@@ -28,9 +28,9 @@ class Parser:
         self.state = self.BEGIN
         self.type = expr_type
         self.param = param
-        self.tokens = self.translate(expr)
+        self.expr = self.replace(expr)
         if expr_type in type_list[:3]:
-            return Function(self.tokens, self.data, param)
+            return Function(self.expr, self.data, param)
         else:
             return self.calculate()
 
@@ -43,55 +43,82 @@ class Parser:
             return "+ {} ".format(value)
         return "{} ".format(value)
 
-    def translate(self, expr):
-        new_expr = ""
-        tokens = self.split(expr, '+-')
-        for token in tokens:
-            sign = 1
-            tmp = 0
-            x = ""
-            op = ""
-            for i, c in enumerate(token):
-                if c == '-':
-                    sign *= -1
-                elif c == '+':
-                    continue
-                elif c in "*/%^":
-                    if len(x):
-                        x = self.get_value(x)
-                        if isinstance(x, str) is False:
-                            x *= sign
-                        elif sign == -1:
-                            x = '- ' + x
-                        elif len(new_expr) != 0:
-                            x = '+ ' + x
-                        sign = 1
-                        if len(op):
-                            val = self.do_operation(val, x, op)
-                        else:
-                            val = x
-                        x = ""
-                        op = c
-                    else:
-                        op += c
-                else:
-                    x += c
-            x = self.get_value(x)
-            if isinstance(x, str) is False:
-                x *= sign
-            elif sign == -1:
-                x = '- ' + x
-            elif len(new_expr) != 0:
-                x = '+ ' + x
-            if len(op):
-                val = self.do_operation(val, x, op)
+    def var_replace(self, expr):
+        matches = re.finditer(r"[\w_\(\)]+", expr)
+        new_expr = expr
+        for elem in matches:
+            var = elem.group()
+            match = re.fullmatch(r"(?P<name>[\w_]+)[\(](?P<param>[\w_]+)[\)]", var)
+            if match is not None:
+                name = match.group('name')
+                param = match.group('param')
             else:
-                val = x
-            new_expr += self.format_val(val, len(new_expr))
+                name = var
+            if name in self.data.keys():
+                if match is None:
+                    value = str(self.data[name])
+                else:
+                    value = str(self.data[name].image(param))
+                new_expr = new_expr.replace(var, value)
+            elif match is not None:
+                raise ValueError("Function '{}' is undefined.".format(name))
+        return new_expr
+
+    def pow_replace(self, expr):
+        regex = r"(?P<x1>[\d\.]+)[\^](?P<x2>[\d\.]+)"
+        tmp = 0
+        calc = re.search(regex, expr)
+        unknown = None
+        new_expr = expr
+        while calc is not None:
+            x1 = self.get_value(calc.group('x1'))
+            x2 = self.get_value(calc.group('x2'))
+            start, end = calc.span()
+            if start != 0 and new_expr[start - 1] == '^':
+                x = self.do_operation(x1, x2, '*')
+            else:
+                x = self.do_operation(x1, x2, '^')
+            new_expr = '{}{}{}'.format(new_expr[:start], x, new_expr[end:])
+            calc = re.search(regex, new_expr)
+        return new_expr
+
+    def replace(self, expr):
+        new_expr = self.var_replace(expr)
+        expr = self.pow_replace(expr)
+        regex = r"[\w\.\^]+([\*\/%]{1,2}[\w\.\^]+)*"
+        r2 = r"(?P<x1>[\w\.\^]+)(?P<op>[\*\/%]{1,2})(?P<x2>[\w\.\^]+)"
+        matches = re.finditer(regex, expr)
+        new_expr = ""
+        tmp = 0
+        for elem in matches:
+            token = elem.group()
+            start, end = elem.span()
+            calc = re.search(r2, token)
+            unknown = None
+            while calc is not None:
+                try:
+                    x1 = self.get_value(calc.group('x1'))
+                    x2 = self.get_value(calc.group('x2'))
+                    op = calc.group('op')
+                    x = self.do_operation(x1, x2,op)
+                    token = '{}{}'.format(x, token[calc.span()[1]:])
+                except:
+                    unknown = op + ' '
+                    unknown += x1 if isinstance(x1, str) else x2
+                    token = (str(x2) if isinstance(x1, str) else str(x1)) + token[calc.span()[1]:]
+                calc = re.search(r2, token)
+            new_expr += expr[tmp:start]
+            if len(expr[tmp:start]):
+                new_expr += ' '
+            if len(token):
+                new_expr += token + ' '
+            if unknown is not None:
+                new_expr += unknown + ' '
+            tmp = end
         return new_expr
 
     def calculate(self):
-        expr = self.tokens.replace(' ', '')
+        expr = self.expr.replace(' ', '')
         tokens = self.split(expr, '+-')
         result = 0
         for i, token in enumerate(tokens):
@@ -130,27 +157,8 @@ class Parser:
         return tokens
 
     def do_operation(self, x1, x2, op):
-        if isinstance(x1, str) and op == "^":
-            i = 0
-            sign = ''
-            if x1[0] in '+-':
-                i = 2
-                sign = x1[:2]
-            return "{}{}^{}".format(sign, x1[i:], x2)
-        if isinstance(x1, str):
-            i = 0
-            sign = ''
-            if x1[0] in '+-':
-                i = 2
-                sign = x1[:2]
-            return "{}{} {} {}".format(sign, abs(x2), op, x1[i:])
-        elif isinstance(x2, str):
-            i = 0
-            sign = ''
-            if x2[0] in '+-':
-                i = 2
-                sign = x2[:2]
-            return "{}{} {} {}".format(sign, abs(x1), op, x2[i:])
+        if isinstance(x1, str) or isinstance(x2, str):
+            raise ValueError('invalid operation')
         if op == '+':
             result = x1 + x2
         elif op == '-':
