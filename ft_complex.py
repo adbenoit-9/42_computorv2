@@ -21,6 +21,9 @@ class Complex:
         return Complex(self.real, self.im)
 
     def __iadd__(self, other):
+        if isrealnumber(other):
+            self.real += other
+            return self
         if isinstance(other, Complex) is False:
             raise TypeError('only Complex')
         self.real += other.real
@@ -28,6 +31,9 @@ class Complex:
         return self
 
     def __isub__(self, other):
+        if isrealnumber(other):
+            self.real -= other
+            return self
         if isinstance(other, Complex) is False:
             raise TypeError('only Complex')
         self.real -= other.real
@@ -35,6 +41,8 @@ class Complex:
         return self
 
     def __imul__(self, other):
+        if isrealnumber(other):
+            other = Complex(other, 0)
         if isinstance(other, Complex):
             new_real = (self.real * other.real) - (self.im * other.im)
             self.im = (self.real * other.im) + (self.im * other.real)
@@ -47,6 +55,8 @@ class Complex:
         return self
 
     def __itruediv__(self, other):
+        if isrealnumber(other):
+            other = Complex(other, 0)
         if isinstance(other, Complex):
             d = other.real * other.real + other.im * other.im
             if d == 0:
@@ -61,17 +71,32 @@ class Complex:
             raise TypeError('Invalid type')
         return self
 
+    def __radd__(self, other):
+        return self.__add__(other)
+
     def __add__(self, other):
+        if isrealnumber(other):
+            return (Complex(real=self.real + other, im=self.im))
         if isinstance(other, Complex) is False:
             raise TypeError('only Complex')
         return (Complex(real=self.real + other.real, im=self.im + other.im))
 
+    def __rsub__(self, other):
+        return self.__sub__(other)
+
     def __sub__(self, other):
+        if isrealnumber(other):
+            return (Complex(real=self.real - other, im=self.im))
         if isinstance(other, Complex) is False:
             raise TypeError('only Complex')
         return (Complex(real=self.real - other.real, im=self.im - other.im))
 
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
     def __mul__(self, other):
+        if isrealnumber(other):
+            other = Complex(other, 0)
         if isinstance(other, Complex):
             real = (self.real * other.real) - (self.im * other.im)
             im = (self.real * other.im) + (self.im * other.real)
@@ -83,6 +108,8 @@ class Complex:
         return Complex(real=real, im=im)
 
     def __rtruediv__(self, other):
+        if isrealnumber(other):
+            other = Complex(other, 0)
         if isinstance(other, Complex):
             return other.__truediv__(self)
         if isrealnumber(other):
@@ -90,6 +117,8 @@ class Complex:
         raise TypeError('Invalid type')
 
     def __truediv__(self, other):
+        if isrealnumber(other):
+            other = Complex(other, 0)
         if isinstance(other, Complex):
             d = other.real * other.real + other.im * other.im
             if d == 0:
@@ -112,6 +141,8 @@ class Complex:
         return res
 
     def __eq__(self, other):
+        if isrealnumber(other):
+            other = Complex(other, 0)
         if isinstance(other, Complex) is True:
             return (self.real == other.real) and (self.im == other.im)
         if isrealnumber(other):
@@ -123,6 +154,10 @@ class Complex:
         return not self.__eq__(other)
 
     def __str__(self):
+        if isinstance(self.im, float) and self.im.is_integer():
+            self.im = int(self.im)
+        if isinstance(self.real, float) and self.real.is_integer():
+            self.real = int(self.real)
         if self.im >= 0:
             return "{real} + {im}i".format(real=self.real, im=self.im)
         else:

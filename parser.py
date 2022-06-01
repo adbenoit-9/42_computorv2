@@ -3,6 +3,7 @@ import math
 from unittest import result
 from function import Function
 from ft_matrix import Matrix
+from ft_complex import Complex
 import re
 
 class Parser:
@@ -180,8 +181,15 @@ class Parser:
         return expr
 
     def get_value(self, x):
+        re_im = r"(?P<im>[\d\.]*)i"
         if x in self.data.keys() and (self.param is None or x != self.param):
             return self.data[x]
+        match = re.fullmatch(re_im, x)
+        if match is not None:
+            if match.group() == "i":
+                return Complex(im=1)
+            else:
+                return Complex(im=float(match.group('im')))
         try:
             x = float(x)
             if x.is_integer():

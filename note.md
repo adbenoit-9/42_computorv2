@@ -41,6 +41,9 @@ stockage data: `dictionary`
 - to handle:
     - [x] 7 * x * 6
     - [x] x^2^3 => 2 * 3
+    - [ ] f(x) = 7 + i
+    - [ ] f(x) = i ?
+    - [ ] (3 + 8i) * 2
 
 ---
 # example
