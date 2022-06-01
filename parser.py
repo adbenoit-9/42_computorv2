@@ -1,4 +1,8 @@
+from dataclasses import replace
+import math
+from unittest import result
 from function import Function
+from ft_matrix import Matrix
 import re
 
 class Parser:
@@ -14,10 +18,12 @@ class Parser:
 
     def __init__(self, data) -> None:
         self.expr = None
+        self.format_expr = None
         self.state = None
         self.type = None
         self.data = data
         self.param = None
+        self.re_operator = r"[^\w\^\.\(\)\[\],;]+"
 
     def start(self, expr, expr_type, param=None):
         type_list = ['function', 'f', 'funct', 'variable', 'var', 'v']
@@ -28,22 +34,15 @@ class Parser:
         self.state = self.BEGIN
         self.type = expr_type
         self.param = param
-        self.expr = self.replace(expr)
+        self.expr = expr
+        self.format_expr = self.format(expr)
         if expr_type in type_list[:3]:
-            return Function(self.expr, self.data, param)
+            return Function(self.format_expr, self.data, param)
         else:
-            return self.calculate()
+            result = self.controller(self.format_expr)
+            return self.calculate(result)
 
-    def format_val(self, value, i):
-        if isinstance(value, str):
-            return "{} ".format(value)
-        if value < 0:
-            return "- {} ".format(value)
-        elif i != 0:
-            return "+ {} ".format(value)
-        return "{} ".format(value)
-
-    def var_replace(self, expr):
+    def replace_var(self, expr):
         matches = re.finditer(r"[\w_\(\)]+", expr)
         new_expr = expr
         for elem in matches:
@@ -64,11 +63,10 @@ class Parser:
                 raise ValueError("Function '{}' is undefined.".format(name))
         return new_expr
 
-    def pow_replace(self, expr):
+    def calculate_pow(self, expr):
         regex = r"(?P<x1>[\d\.]+)[\^](?P<x2>[\d\.]+)"
         tmp = 0
         calc = re.search(regex, expr)
-        unknown = None
         new_expr = expr
         while calc is not None:
             x1 = self.get_value(calc.group('x1'))
@@ -82,18 +80,16 @@ class Parser:
             calc = re.search(regex, new_expr)
         return new_expr
 
-    def replace(self, expr):
-        new_expr = self.var_replace(expr)
-        expr = self.pow_replace(expr)
-        regex = r"[\w\.\^]+([\*\/%]{1,2}[\w\.\^]+)*"
-        r2 = r"(?P<x1>[\w\.\^]+)(?P<op>[\*\/%]{1,2})(?P<x2>[\w\.\^]+)"
+    def format(self, expr):
+        expr = self.replace_var(expr)
+        expr = self.calculate_pow(expr)
+        regex = r"[\w\.\^]+([^\w\^\.\(\)\[\],;\-\+]+[\w\.\^]+)*"
+        r2 = r"(?P<x1>[\w\.\^]+)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)(?P<x2>[\w\.\^]+)"
         matches = re.finditer(regex, expr)
-        new_expr = ""
-        tmp = 0
         for elem in matches:
-            token = elem.group()
-            start, end = elem.span()
-            calc = re.search(r2, token)
+            operation = elem.group()
+            result = operation
+            calc = re.search(r2, result)
             unknown = None
             while calc is not None:
                 try:
@@ -101,34 +97,68 @@ class Parser:
                     x2 = self.get_value(calc.group('x2'))
                     op = calc.group('op')
                     x = self.do_operation(x1, x2,op)
-                    token = '{}{}'.format(x, token[calc.span()[1]:])
-                except:
-                    unknown = op + ' '
+                    result = '{}{}'.format(x, result[calc.span()[1]:])
+                except TypeError:
+                    unknown = op
                     unknown += x1 if isinstance(x1, str) else x2
-                    token = (str(x2) if isinstance(x1, str) else str(x1)) + token[calc.span()[1]:]
-                calc = re.search(r2, token)
-            new_expr += expr[tmp:start]
-            if len(expr[tmp:start]):
-                new_expr += ' '
-            if len(token):
-                new_expr += token + ' '
+                    result = (str(x2) if isinstance(x1, str) else str(x1)) + result[calc.span()[1]:]
+                calc = re.search(r2, result)
             if unknown is not None:
-                new_expr += unknown + ' '
-            tmp = end
-        return new_expr
+                result += unknown
+            expr = expr.replace(operation, result)
+        self.rm_useless_brackets(expr)
+        return self.put_space(expr)
 
-    def calculate(self):
-        expr = self.expr.replace(' ', '')
-        tokens = self.split(expr, '+-')
+    def controller(self, expr):
+        regex = r"\([^\(\)]+\)"
+        matches = list(re.finditer(regex, expr))
+        n = len(matches)
+        for match in matches:
+            result = self.calculate(match.group()[1:-1])
+            expr = expr.replace(match.group(), str(result))
+            expr = self.format(expr.replace(' ', ''))
+            print(expr)
+        if n:
+            return self.controller(expr)
+        return expr
+
+        
+    def calculate(self, expr):
+        tokens = expr.split()
         result = 0
+        value = 0
+        op = None
         for i, token in enumerate(tokens):
+            if token in '-+':
+                op = token
+                continue
             value = self.get_value(token)
-            if isinstance(value, str):
-                raise ValueError("(CGI) Variable '{}' is undefined".format(value))
-            result += self.get_value(token)
+            if op is not None:
+                try:
+                    result = self.do_operation(result, value, op)
+                except TypeError as err:
+                    raise ValueError(err)
+            else:
+                result = value
         return result
 
     # UTILS
+
+    def rm_useless_brackets(self, expr):
+        regex = r"\([\w\.\^\[\],;]+\)"
+        matches = re.finditer(regex, expr)
+        for elem in matches:
+            expr = expr.replace(elem.group(), elem.group()[1:-1])
+        return expr
+
+    def put_space(self, expr):
+        matches = re.finditer(self.re_operator, expr)
+        op = []
+        for elem in matches:
+            if elem.group() not in op:
+                expr = expr.replace(elem.group(), " {} ".format(elem.group()))
+            op.append(elem.group())
+        return expr
 
     def get_value(self, x):
         if x in self.data.keys() and (self.param is None or x != self.param):
@@ -141,24 +171,10 @@ class Parser:
         except Exception:
             return x
 
-    def split(self, string, sep, rm_sep=0):
-        if isinstance(string, str) is False or \
-                isinstance(sep, str) is False or \
-                isinstance(rm_sep, int) is False:
-            raise ValueError('Parser: split failed')
-        tokens = []
-        tmp = 0
-        for i, c in enumerate(string):
-            if c in sep and i != 0:
-                tokens.append(string[tmp:i])
-                tmp = i + rm_sep
-        if tmp < len(string):
-            tokens.append(string[tmp:])
-        return tokens
-
     def do_operation(self, x1, x2, op):
         if isinstance(x1, str) or isinstance(x2, str):
-            raise ValueError('invalid operation')
+            raise TypeError("operation between '{}' and '{}' not supported"
+                            .format(type(x1).__name__, type(x2).__name__))
         if op == '+':
             result = x1 + x2
         elif op == '-':
@@ -173,7 +189,10 @@ class Parser:
         elif op == '^':
             result = x1 ** x2
         elif op == '**':
+            if isinstance(x1, Matrix) is False or isinstance(x2, Matrix):
+                raise ValueError("operator '**' not supported between '{}' and '{}'."
+                                .format(type(x1).__name__, type(x2).__name__))
             result = x1 * x2
         else:
-            raise ValueError('Parser: invalid operation ')
+            raise ValueError("operator '{}' not supported.".format(op))
         return result

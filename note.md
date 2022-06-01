@@ -31,7 +31,8 @@ stockage data: `dictionary`
 
 - priority:
     - [x] mul/div/mod
-    - [ ] bracket
+    - [x] bracket calc
+    - [ ] bracket function
 
 - [x] exit program : quit and CTRL+D
 

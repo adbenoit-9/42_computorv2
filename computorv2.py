@@ -31,7 +31,7 @@ def isfunction(expr):
         return expr, None
     end = expr.find(')')
     if end != len(expr) - 1:
-        raise ValueError('(CLI) Invalid command line')
+        raise ValueError('Invalid command line')
     return expr[:index], expr[index + 1:end]
 
 def calculate(parser, cmd, data):
@@ -41,7 +41,7 @@ def calculate(parser, cmd, data):
             result = parser.start(name, 'var')
         else:
             if name not in data.keys():
-                raise ValueError("(CLI) Function '{}' not defined".format(name))
+                raise ValueError("Function '{}' not defined".format(name))
             if param in data.keys():
                 result = data[name].image(data[param])
             else:
@@ -59,9 +59,9 @@ def cli(data, cmd):
     elif cmd[1].endswith('?'):
         name, param = isfunction(cmd[0])
         if param == None:
-            raise ValueError('(CLI) Invalid command line')
+            raise ValueError('Invalid command line')
         if name not in data.keys():
-                raise ValueError("(CLI) Function '{}' not defined".format(name))
+                raise ValueError("Function '{}' not defined".format(name))
         data[name].resolve(cmd[1][:-1])
         return data
     elif len(cmd) == 2:
@@ -70,18 +70,18 @@ def cli(data, cmd):
         if param is None:
             for i in name:
                 if i in string.punctuation:
-                    raise ValueError("(CLI) function parameter '{}' is invalid".format(param))
+                    raise ValueError("function parameter '{}' is invalid".format(param))
             if name == "i":
-                raise ValueError("(CLI) function parameter '{}' is invalid".format(param))
+                raise ValueError("function parameter '{}' is invalid".format(param))
             data[name] = parser.start(expr, 'var')
         else:
             for i in param:
                 if i in string.punctuation:
-                    raise ValueError("(CLI) function parameter '{}' is invalid".format(param))
+                    raise ValueError("function parameter '{}' is invalid".format(param))
             data[name] = parser.start(expr, 'funct', param)
         result = data[name]
     else:
-        raise ValueError('(CLI) Invalid command line')
+        raise ValueError('Invalid command line')
     print(result)
     return data
 
