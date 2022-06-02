@@ -16,7 +16,7 @@ stockage data: `dictionary`
     - [ ] calculate image
         - [x] x is real
         - [ ] x is complex
-        - [ ] x is matrix
+        - [x] x is matrix
         - [x] x is calc
         - [x] x formula
     - [x] handle var
@@ -26,7 +26,7 @@ stockage data: `dictionary`
     - [x] replace var in simple calcul
     - [x] replace var in function
     - [x] real type
-    - [ ] matrix type
+    - [x] matrix type
     - [x] function type
     - [ ] complex type
     - [ ] decomposition: pas sure que ca soit la bonne solution

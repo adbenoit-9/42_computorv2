@@ -7,15 +7,15 @@ class Matrix:
         if isinstance(args[0], list):
             if len(args) != 1:
                 raise ValueError('Invalid Matrix')
-            n = len(args[0])
-            if n == 0:
+            m = len(args[0])
+            if m == 0:
                 self.shape = (0, 0)
             elif isinstance(args[0][0], list) is False:
                 raise ValueError('Invalid Matrix')
-            m = len(args[0][0])
+            n = len(args[0][0])
             self.shape = (m, n)
             for row in args[0]:
-                if isinstance(row, list) is False or len(row) != m:
+                if isinstance(row, list) is False or len(row) != n:
                     raise ValueError('Invalid Matrix')
                 for i in row:
                     if isnumber(i) is False:
@@ -26,11 +26,9 @@ class Matrix:
                 and isinstance(args[0][1], int)\
                 and isrealnumber(args[1]):
             self.shape = args[0]
-            column = []
-            for i in range(self.shape[1]):
-                column.append(args[1])
             for i in range(self.shape[0]):
-                self.values.append(column)
+                row = [args[1]] * self.shape[1]
+                self.values.append(row)
         else:
             raise ValueError('Invalid argument(s)')
 
@@ -45,7 +43,8 @@ class Matrix:
 
     def __add__(self, v):
         if isinstance(v, Matrix) is False or self.shape != v.shape:
-            raise ValueError("Matrixs must have the same dimensions.")
+            print(self, v)
+            raise ValueError("addition between matrix of differents dimensions not supported.")
         res = self.copy()
         for i, row in enumerate(v.values):
             for j, val in enumerate(row):
@@ -57,7 +56,7 @@ class Matrix:
 
     def __sub__(self, v):
         if isinstance(v, Matrix) is False or self.shape != v.shape:
-            raise ValueError("Matrixs must have the same dimensions.")
+            raise ValueError("subtraction between matrix of differents dimensions not supported.")
         res = self.copy()
         for i, row in enumerate(v.values):
             for j, val in enumerate(row):
@@ -69,7 +68,14 @@ class Matrix:
 
     def __mul__(self, n):
         if isinstance(n, Matrix):
-            return self.dot(n)
+            print(n)
+            if self.shape != n.shape:
+                raise ValueError("term-to-term multiplication between matrix of differents dimensions not supported.")
+            res = self.copy()
+            for i, row in enumerate(self.values):
+                for j, val in enumerate(row):
+                    res.values[i][j] *= n.values[i][j]
+            return res
         if isrealnumber(n) is False:
             raise ValueError("A Matrix can be multiplied only by scalar.")
         res = self.copy()
@@ -96,29 +102,73 @@ class Matrix:
         raise ValueError("A scalar cannot be divided by a Matrix.")
 
     def __repr__(self):
-        return 'Matrix({})'.format(self.values)
-
-    def __str__(self):
         ret = ""
         for i, row in enumerate(self.values):
             ret += '['
             for j, val in enumerate(row):
                 ret += ' {} '.format(val)
-                if j != self.shape[0] - 1:
+                if j != self.shape[1] - 1:
                     ret += ','
-            if i != self.shape[1] - 1:
+            if i != self.shape[0] - 1:
                 ret += ']\n'
             else:
                 ret += ']'
         return ret
 
-    # def dot(self, other):
-    #     if isinstance(v, Matrix) is False:
-    #         raise ValueError("Matrixs must have the same dimensions.")
-    #     vect = [0] * 
-    #     for i, row in enumerate(self.values):
-    #         for j, val in enumerate(row):
-    #     return res
+    def __str__(self):
+        ret = "["
+        for i, row in enumerate(self.values):
+            ret += '['
+            for j, val in enumerate(row):
+                ret += '{}'.format(val)
+                if j != self.shape[1] - 1:
+                    ret += ','
+            if i != self.shape[0] - 1:
+                ret += '];'
+            else:
+                ret += ']'
+        ret += ']'
+        return ret
+
+    def identity(self, n):
+        mat = []
+        for i in range(n):
+            row = [0] * n
+            row[i] = 1
+            mat.append(row)
+        return Matrix(mat)
+
+    def is_square(self):
+        if self.shape[0] == self.shape[1]:
+            return True
+        else:
+            return False
+
+    def __pow__(self, n):
+        if self.is_square() is False:
+            raise ValueError("power supported only on square matrix")
+        if n == 0:
+            return self.identity(self.shape[0])
+        ret = self.copy()
+        for i in range(n - 1):
+            ret = ret.dot(self)
+        return ret
+                     
+    def dot(self, other):
+        if isinstance(other, Matrix) is False:
+            raise ValueError("Matrix product with '{}' not supported"
+                             .format(type(other).__name__))
+        if self.shape[1] != other.shape[0]:
+            raise ValueError("product not supported between matrix of dimensions {} and {}."
+                             .format(self.shape, other.shape))
+        prod = []
+        for i in range(self.shape[0]):
+            prod.append([0] * other.shape[1])
+        for i in range(self.shape[0]):
+            for j in range(other.shape[1]):
+                for k in range(self.shape[1]):
+                    prod[i][j] += self.values[i][k] * other.values[k][j];
+        return Matrix(prod)
 
     def T(self):
         if self.shape == (0, 0):

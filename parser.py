@@ -1,10 +1,12 @@
 from dataclasses import replace
 import math
+from multiprocessing.sharedctypes import Value
 from unittest import result
 from function import Function
 from ft_matrix import Matrix
 from ft_complex import Complex
 import re
+from ft_math import ft_pow
 
 class Parser:
     '''Parse a mathematic expression.'''
@@ -56,7 +58,7 @@ class Parser:
         for match in matches:
             funct = match.group()
             name = match.group('name')
-            param = self.get_value(match.group('param'))
+            param = self.str_to_value(match.group('param'))
             if isinstance(param, str) and self.type == 'funct':
                 continue
             elif isinstance(param, str):
@@ -88,8 +90,8 @@ class Parser:
         calc = re.search(regex, expr)
         new_expr = expr
         while calc is not None:
-            x1 = self.get_value(calc.group('x1'))
-            x2 = self.get_value(calc.group('x2'))
+            x1 = self.str_to_value(calc.group('x1'))
+            x2 = self.str_to_value(calc.group('x2'))
             start, end = calc.span()
             if start != 0 and new_expr[start - 1] == '^':
                 x = self.do_operation(x1, x2, '*')
@@ -103,8 +105,8 @@ class Parser:
         expr = self.replace_var(expr)
         expr = self.replace_funct(expr)
         expr = self.calculate_pow(expr)
-        regex = r"[\w\.\^]+([^\w\^\.\(\)\[\],;\-\+]+[\w\.\^]+)*"
-        r2 = r"(?P<x1>[\w\.\^]+)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)(?P<x2>[\w\.\^]+)"
+        regex = r"[\w\^\.\(\)\[\],;\-\+]+([^\w\^\.\(\)\[\],;\-\+]+[\w\^\.\(\)\[\],;\-\+]+)*"
+        r2 = r"(?P<x1>[\w\^\.\(\)\[\],;\-\+]+)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)(?P<x2>[\w\^\.\(\)\[\],;\-\+]+)"
         matches = re.finditer(regex, expr)
         for elem in matches:
             operation = elem.group()
@@ -113,8 +115,8 @@ class Parser:
             unknown = None
             while calc is not None:
                 try:
-                    x1 = self.get_value(calc.group('x1'))
-                    x2 = self.get_value(calc.group('x2'))
+                    x1 = self.str_to_value(calc.group('x1'))
+                    x2 = self.str_to_value(calc.group('x2'))
                     op = calc.group('op')
                     x = self.do_operation(x1, x2,op)
                     result = '{}{}'.format(x, result[calc.span()[1]:])
@@ -152,7 +154,7 @@ class Parser:
             if token in '-+':
                 op = token
                 continue
-            value = self.get_value(token)
+            value = self.str_to_value(token)
             if op is not None:
                 try:
                     result = self.do_operation(result, value, op)
@@ -180,16 +182,51 @@ class Parser:
             op.append(elem.group())
         return expr
 
-    def get_value(self, x):
-        re_im = r"(?P<im>[\d\.]*)i"
+    def str_to_matrix(self, mat):
+        if isinstance(mat, str) is False:
+            raise ValueError("str_to_matrix: type '{}' not supported"
+                             .format(type(mat).__name__))
+        if len(mat) < 2:
+            return None
+        if mat[0] != '[' or mat[-1] != ']':
+            return None
+        rows = mat[1:-1].split(';')
+        lst = [[] for _ in range(len(rows))]
+        for i, row in enumerate(rows):
+            elem_lst = row[1:-1].split(',')
+            for elem in elem_lst:
+                lst[i].append(self.str_to_value(elem))
+        return Matrix(lst)
+
+    def str_to_complex(self, comp):
+        if isinstance(comp, str) is False:
+            raise ValueError("str_to_complex: type '{}' not supported"
+                             .format(type(comp).__name__))
+        re_im = r"([\d\.\+\-]+){,1}[\d\.\+\-]*\*{,1}i"
+        match = re.fullmatch(re_im, comp)
+        if match is None:
+            return None
+        re_nb = r"[\d\.\+\-]+"
+        matches = list(re.finditer(re_nb, comp))
+        n = len(matches)
+        if n == 0:
+            return Complex(im=1)
+        elif n == 1:
+            return Complex(im=float(matches[0]))
+        return Complex(real=float(matches[0]), im=float(matches[1]))
+
+    def str_to_value(self, x):
+        if isinstance(x, str) is False:
+            raise ValueError("str_to_value: type '{}' not supported"
+                             .format(type(x).__name__))
         if x in self.data.keys() and (self.param is None or x != self.param):
             return self.data[x]
-        match = re.fullmatch(re_im, x)
-        if match is not None:
-            if match.group() == "i":
-                return Complex(im=1)
-            else:
-                return Complex(im=float(match.group('im')))
+        comp = self.str_to_complex(x)
+        if comp is not None:
+            return comp
+        mat = self.str_to_matrix(x)
+        if mat is not None:
+            return mat
         try:
             x = float(x)
             if x.is_integer():
@@ -202,6 +239,7 @@ class Parser:
         if isinstance(x1, str) or isinstance(x2, str):
             raise TypeError("operation between '{}' and '{}' not supported"
                             .format(type(x1).__name__, type(x2).__name__))
+        print(x1, op, x2)
         if op == '+':
             result = x1 + x2
         elif op == '-':
@@ -216,10 +254,10 @@ class Parser:
         elif op == '^':
             result = x1 ** x2
         elif op == '**':
-            if isinstance(x1, Matrix) is False or isinstance(x2, Matrix):
+            if isinstance(x1, Matrix) is False and isinstance(x2, Matrix):
                 raise ValueError("operator '**' not supported between '{}' and '{}'."
                                 .format(type(x1).__name__, type(x2).__name__))
-            result = x1 * x2
+            result = x1.dot(x2)
         else:
             raise ValueError("operator '{}' not supported.".format(op))
         return result

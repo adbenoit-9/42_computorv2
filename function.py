@@ -1,4 +1,6 @@
 from asyncio import exceptions
+from ft_complex import Complex
+from ft_matrix import Matrix
 from polynomial import Polynomial
 from utils import isnumber
 
@@ -20,10 +22,18 @@ class Function:
         if isinstance(x, str):
             self.unknown = x
             return self
-        im = [0] * len(self.coefs)
+        if isinstance(x, Complex):
+            tab = [Complex()] * len(self.coefs)
+        elif isinstance(x, Matrix):
+            tab = [Matrix(x.shape, 0)] * len(self.coefs)
+        else:
+            tab = [0] * len(self.coefs)
         for i, coef in enumerate(self.coefs):
-            im[i] = coef * (x ** i)
-        return sum(im)
+            tab[i] = coef * (x ** i)
+        im = tab[0]
+        for i in range(1, len(tab)):
+            im += tab[i]
+        return im
 
     def resolve(self, y, unknown='x'):
         '''

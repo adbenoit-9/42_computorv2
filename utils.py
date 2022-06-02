@@ -12,3 +12,5 @@ def isnumber(n):
             isinstance(n, Complex):
         return True
     return False
+
+

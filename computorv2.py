@@ -3,6 +3,8 @@ import sys, signal, string
 from parser import Parser
 from unicodedata import name
 
+from ft_matrix import Matrix
+
 class str_type:
     STRING = 0,
     FLOAT = 1,
@@ -74,6 +76,7 @@ def cli(data, cmd):
             if name in ['i', 'cos', 'sin', 'tan', 'abs', 'sqrt']:
                 raise ValueError("function parameter '{}' is invalid".format(param))
             data[name] = parser.start(expr, 'var')
+            result = data[name]
         else:
             for i in param:
                 if i in string.punctuation:
@@ -83,7 +86,10 @@ def cli(data, cmd):
         result = data[name]
     else:
         raise ValueError('Invalid command line')
-    print(result)
+    if isinstance(result, Matrix):
+        print(result.__repr__())
+    else:
+        print(result)
     return data
 
 
