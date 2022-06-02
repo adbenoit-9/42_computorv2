@@ -159,10 +159,24 @@ class Complex:
         if isinstance(self.real, float) and self.real.is_integer():
             self.real = int(self.real)
         if self.im >= 0 and self.real != 0:
-            return "{real} + {im} * i".format(real=self.real, im=self.im)
+            return "{real}+{im}*i".format(real=self.real, im=self.im)
         elif self.real != 0:
-            return "{real} - {im} * i".format(real=self.real, im=-self.im )
+            return "{real}-{im}*i".format(real=self.real, im=-self.im )
         elif self.im >= 0:
-            return "{im} * i".format(im=self.im)
+            return "{im}*i".format(im=self.im)
         else:
-            return "- {im} * i".format(im=-self.im)
+            return "-{im}*i".format(im=-self.im)
+
+    def __repr__(self):
+        if isinstance(self.im, float) and self.im.is_integer():
+            self.im = int(self.im)
+        if isinstance(self.real, float) and self.real.is_integer():
+            self.real = int(self.real)
+        if self.im >= 0 and self.real != 0:
+            return "{real}+{im}*i".format(real=self.real, im=self.im)
+        elif self.real != 0:
+            return "{real}-{im}*i".format(real=self.real, im=-self.im )
+        elif self.im >= 0:
+            return "{im}*i".format(im=self.im)
+        else:
+            return "-{im}*i".format(im=-self.im)

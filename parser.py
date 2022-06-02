@@ -53,7 +53,7 @@ class Parser:
             'abs': abs,
             'sqrt': math.sqrt,
         }
-        matches = re.finditer(r"(?P<name>[\w_]+)[\(](?P<param>[\w\.\[\],;i]+)[\)]", expr)
+        matches = re.finditer(r"(?P<name>[\w_]+)[\(](?P<param>[\w\.\[\],;]+|[\w\.\[\],;]*[+-]?[\w\.\[\],;]*[\*]?[i])[\)]", expr)
         for match in matches:
             funct = match.group()
             name = match.group('name')
@@ -124,6 +124,8 @@ class Parser:
                     unknown += x1 if isinstance(x1, str) else x2
                     result = (str(x2) if isinstance(x1, str) else str(x1)) + result[calc.span()[1]:]
                 calc = re.search(r2, result)
+                if result == calc.group() and isinstance(self.str_to_value(calc.group()), Complex):
+                    break
             if unknown is not None:
                 result += unknown
             expr = expr.replace(operation, result)
@@ -132,7 +134,9 @@ class Parser:
         return self.put_space(expr)
 
     def controller(self, expr):
-        regex = r"\([^\(\)]+\)"
+        if isinstance(self.str_to_value(expr), Complex):
+            return self.format(expr.replace(' ', ''))
+        regex = r"[^\w\_]\([^\(\)]+\)"
         matches = list(re.finditer(regex, expr))
         n = len(matches)
         for match in matches:
@@ -201,18 +205,20 @@ class Parser:
         if isinstance(comp, str) is False:
             raise ValueError("str_to_complex: type '{}' not supported"
                              .format(type(comp).__name__))
-        re_im = r"([\d\.\+\-]+){,1}[\d\.\+\-]*\*{,1}i"
+        re_im = r"([\d\.+-]+)?([\d\.\+\-]+[\*])?i{1}"
         match = re.fullmatch(re_im, comp)
         if match is None:
             return None
-        re_nb = r"[\d\.\+\-]+"
+        re_nb = r"[+-]?[\d\.]+"
         matches = list(re.finditer(re_nb, comp))
         n = len(matches)
         if n == 0:
             return Complex(im=1)
         elif n == 1:
-            return Complex(im=float(matches[0]))
-        return Complex(real=float(matches[0]), im=float(matches[1]))
+            if comp[matches[0].span()[1]] == '*':
+                return Complex(im=float(matches[0].group()))
+            return Complex(real=float(matches[0].group()), im=1)
+        return Complex(real=float(matches[0].group()), im=float(matches[1].group()))
 
     def str_to_value(self, x):
         if isinstance(x, str) is False:
