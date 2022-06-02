@@ -6,7 +6,6 @@ from function import Function
 from ft_matrix import Matrix
 from ft_complex import Complex
 import re
-from ft_math import ft_pow
 
 class Parser:
     '''Parse a mathematic expression.'''
