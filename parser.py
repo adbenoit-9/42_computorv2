@@ -52,13 +52,13 @@ class Parser:
         if begin > 0 and expr[begin - 1] in '*/':
             op = expr[begin - 1]
             for i in range(begin - 1, 0, -1):
-                if expr[i] in "*/%()":
+                if expr[i] in "*/%()^":
                     match = expr[i - 1:end]
                     break
         elif end < len(expr) and expr[end] in '*/':
             op = expr[end]
             for i in range(end + 1, len(expr)):
-                if expr[i] in "*/%()":
+                if expr[i] in "*/%()^":
                     match = expr[begin:i]
                     break
         else:
@@ -102,11 +102,8 @@ class Parser:
             if len(param) == 0:
                 raise ValueError('function parameter not found.')
             param = self.str_to_value(param)
-            op = r"[(\*\/%+-]"
-            if isinstance(param, str) and re.search(op, param) is not None:
-                continue
-            elif isinstance(param, str):
-                raise ValueError("variable '{}' is undefined.".format(param))
+            if isinstance(param, str): 
+                param = self.calculate(self.format(param))
             if name in math_funct.keys():
                 value = math_funct[name](param)
             elif name in self.data.keys():
@@ -177,7 +174,6 @@ class Parser:
         expr = self.calculate_pow(expr)
         expr = self.rm_useless_brackets(expr)
         expr = self.reduce(expr)
-        expr = self.replace_funct(expr)
         return expr
         
     def calculate(self, expr):
@@ -296,9 +292,14 @@ class Parser:
             return x
 
     def do_operation(self, x1, x2, op):
+        regex = r"[\w_\^]+"
         if isinstance(x2, str):
+            if re.fullmatch(regex, x2) is None:
+                raise ValueError("invalid variable name '{}'".format(x2))
             return "{}{}{}".format(x1, op, x2)
         elif isinstance(x1, str):
+            if re.fullmatch(regex, x1) is None:
+                raise ValueError("invalid variable name '{}'".format(x1))
             return "{}{}{}".format(x2, op, x1)
         if op == '+':
             result = x1 + x2

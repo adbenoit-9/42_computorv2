@@ -1,5 +1,6 @@
 from parser import Parser
 from ft_matrix import Matrix
+import string, sys
 
 class str_type:
     STRING = 0,

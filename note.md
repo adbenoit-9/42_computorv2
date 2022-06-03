@@ -45,7 +45,8 @@ stockage data: `dictionary`
     - [ ] f(x) = i ?
     - [x] (3 + 8i) * 2
     - [ ] x*(3-4)
-    - [ ] f(3+4)
+    - [x] f(3+4)
+    - [ ] (4+x)^2 + 3
 
 ---
 # example
@@ -70,14 +71,12 @@ data = {
     - [ ] Afficher la liste des variables stockées ainsi que leurs valeurs
     - [ ] Historique des commandes avec résultats (pas fun)
     - [x] Ajout de fonctions usuelles (exponentielle, racine carrée, valeur absolue, cosinus, sinus, tangente, etc.)
+    - [x] Composition de fonction
 
 - parsing flemme:
     - [ ] Calcul de norme
     - [ ] Inversion de matrice et d'autres deja fait dans Matrix
     - [ ] Ajout du calcul en radian pour les angles
-
-- parsing mega flemme:
-    - [ ] Composition de fonction
 
 - facile si pyplot autorise
     - [ ] Affichage de courbe de fonctions

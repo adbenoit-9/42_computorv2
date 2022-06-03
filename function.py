@@ -21,7 +21,8 @@ class Function:
 
     def image(self, x):
         if isinstance(x, str):
-            return self.expr.replace(self.unknown, x)
+            param = "({})".format(x)
+            return self.expr.replace(self.unknown, param)
         if isinstance(x, Complex):
             tab = [Complex()] * len(self.coefs)
         elif isinstance(x, Matrix):
