@@ -1,6 +1,7 @@
 from dataclasses import replace
 import math
 from multiprocessing.sharedctypes import Value
+from tracemalloc import start
 from unittest import result
 from function import Function
 from ft_matrix import Matrix
@@ -39,10 +40,54 @@ class Parser:
         self.expr = expr
         self.format_expr = self.format(expr)
         if expr_type in type_list[:3]:
-            return Function(self.format_expr, self.data, param)
+            print(self.put_space(self.format_expr))
+            expr = self.decompose(self.format_expr)
+            expr = self.put_space(self.format_expr)
+            return Function(expr, self.data, param)
         else:
-            result = self.controller(self.format_expr)
-            return self.calculate(result)
+            return self.calculate(self.decompose(expr))
+
+
+    def decompose(self, expr):
+        begin = expr.rfind('(')
+        if begin == -1:
+            return self.format(expr)
+        match = expr[begin:]
+        end = match.find(')')
+        if end == -1:
+            raise ValueError("')' is missing")
+        end += begin + 1
+        if begin > 0 and expr[begin - 1] in '*/':
+            op = expr[begin - 1]
+            for i in range(begin - 1, 0, -1):
+                if expr[i] in "*/%()":
+                    match = expr[i - 1:end]
+                    break
+        elif end < len(expr) and expr[end] in '*/':
+            op = expr[end]
+            for i in range(end + 1, len(expr)):
+                if expr[i] in "*/%()":
+                    match = expr[begin:i]
+                    break
+        else:
+            return self.decompose(expr.replace(expr[begin:end],
+                                  expr[begin + 1:end - 1]))
+        i = match.find(op)
+        tokens = [match[:i], match[i + 1:]]
+        new_expr = ""
+        for i in range(len(tokens)):
+            if re.fullmatch(r"\(.+\)", tokens[i]) is None:
+                tokens[i] = [tokens[i]]
+            else:
+                tokens[i] = tokens[i][1:-1].split('+')
+        for i in range(1, len(tokens)):
+            for j in range(len(tokens[i - 1])):
+                for k in range(len(tokens[i])):
+                    if len(new_expr) != 0:
+                        new_expr += '+'
+                    new_expr += tokens[i - 1][j] + op + tokens[i][k]
+        expr = expr.replace(match, new_expr)
+        return self.decompose(expr)
 
     def replace_funct(self, expr):
         math_funct = {
@@ -53,12 +98,20 @@ class Parser:
             'abs': abs,
             'sqrt': math.sqrt,
         }
-        matches = re.finditer(r"(?P<name>[\w_]+)[\(](?P<param>[\w\.\[\],;]+|[\w\.\[\],;]*[+-]?[\w\.\[\],;]*[\*]?[i])[\)]", expr)
+        matches = re.finditer(r"(?P<name>[\w_]+)[\(](?P<param>.*)[\)]", expr)
         for match in matches:
             funct = match.group()
             name = match.group('name')
-            param = self.str_to_value(match.group('param'))
-            if isinstance(param, str) and self.type == 'funct':
+            param = match.group('param')
+            if isinstance(self.str_to_value(name), str) is False and \
+                    isinstance(self.str_to_value(name), Function) is False:
+                expr = expr[:match.span()[0] + len(name)] + '*' + expr[match.span()[0] + len(name):]
+                continue
+            if len(param) == 0:
+                raise ValueError('function parameter not found.')
+            param = self.str_to_value(param)
+            op = r"[(\*\/%+-]"
+            if isinstance(param, str) and re.search(op, param) is not None:
                 continue
             elif isinstance(param, str):
                 raise ValueError("variable '{}' is undefined.".format(param))
@@ -100,56 +153,48 @@ class Parser:
             calc = re.search(regex, new_expr)
         return new_expr
 
+    def reduce(self, expr):
+        regex = r"(?P<x1>[-]{,1}[\w\^\.\[\],;]+)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)(?P<x2>[-]{,1}[\w\^\.\[\],;]+)"
+        unknown = None
+        match = re.search(regex, expr)
+        while match is not None:
+            operation = match.group()
+            result = operation
+            try:
+                x1 = self.str_to_value(match.group('x1'))
+                x2 = self.str_to_value(match.group('x2'))
+                op = match.group('op')
+                x = self.do_operation(x1, x2,op)
+                result = '{}{}'.format(x, result[match.span()[1]:])
+            except TypeError:
+                unknown = op
+                unknown += x1 if isinstance(x1, str) else x2
+                result = (str(x2) if isinstance(x1, str) else str(x1)) + result[match.span()[1]:]
+            match = re.search(regex, result)
+        if unknown is not None:
+            result += unknown
+        expr = expr.replace(operation, result)
+        expr = self.rm_useless_brackets(expr)
+        return expr
+
     def format(self, expr):
+        if isinstance(expr, str) is False:
+            raise ValueError("Parse: format: bad argument, '{}' not supprted".format(type(expr).__name__))
+        expr = expr.replace(' ', '')
         expr = self.replace_var(expr)
         expr = self.replace_funct(expr)
         expr = self.calculate_pow(expr)
-        regex = r"[\w\^\.\(\)\[\],;\-\+]+([^\w\^\.\(\)\[\],;\-\+]+[\w\^\.\(\)\[\],;\-\+]+)*"
-        r2 = r"(?P<x1>[\w\^\.\(\)\[\],;\-\+]+)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)(?P<x2>[\w\^\.\(\)\[\],;\-\+]+)"
-        matches = re.finditer(regex, expr)
-        for elem in matches:
-            operation = elem.group()
-            result = operation
-            calc = re.search(r2, result)
-            unknown = None
-            while calc is not None:
-                try:
-                    x1 = self.str_to_value(calc.group('x1'))
-                    x2 = self.str_to_value(calc.group('x2'))
-                    op = calc.group('op')
-                    x = self.do_operation(x1, x2,op)
-                    result = '{}{}'.format(x, result[calc.span()[1]:])
-                except TypeError:
-                    unknown = op
-                    unknown += x1 if isinstance(x1, str) else x2
-                    result = (str(x2) if isinstance(x1, str) else str(x1)) + result[calc.span()[1]:]
-                calc = re.search(r2, result)
-                if result == calc.group() and isinstance(self.str_to_value(calc.group()), Complex):
-                    break
-            if unknown is not None:
-                result += unknown
-            expr = expr.replace(operation, result)
-        expr = self.replace_funct(expr)
         expr = self.rm_useless_brackets(expr)
-        return self.put_space(expr)
-
-    def controller(self, expr):
-        if isinstance(self.str_to_value(expr), Complex):
-            return self.format(expr.replace(' ', ''))
-        regex = r"[^\w\_]\([^\(\)]+\)"
+        regex = r"[-]{,1}[\w\^\.\[\],;]+([^\w\^\.\(\)\[\],;\-\+]+[-]{,1}[\w\^\.\[\],;]+)+"
         matches = list(re.finditer(regex, expr))
-        n = len(matches)
-        for match in matches:
-            result = self.calculate(match.group()[1:-1])
-            expr = expr.replace(match.group(), '({})'.format(result))
-            expr = self.format(expr.replace(' ', ''))
-        if n:
-            return self.controller(expr)
-        return self.format(expr.replace(' ', ''))
-
+        while len(matches):
+            expr = self.reduce(expr)
+            matches = list(re.finditer(regex, expr))
+        expr = self.replace_funct(expr)
+        return expr
         
     def calculate(self, expr):
-        tokens = expr.split()
+        tokens = self.split(expr)
         result = 0
         value = 0
         op = None
@@ -170,10 +215,18 @@ class Parser:
     # UTILS
 
     def rm_useless_brackets(self, expr):
-        regex = r"\([\w\.\^\[\],;]+\)"
-        matches = re.finditer(regex, expr)
-        for elem in matches:
-            expr = expr.replace(elem.group(), elem.group()[1:-1])
+        regex = r"\([^\+\-\*\/%\(\)]*\)"
+        matches = list(re.finditer(regex, expr))
+        change = 1
+        while len(matches) and change:
+            change = 0
+            for elem in matches:
+                span = elem.span()
+                if span[0] != 0 and expr[span[0] - 1] not in "*%/-+(":
+                    continue
+                change = 1
+                expr = expr.replace(elem.group(), elem.group()[1:-1])
+            matches = list(re.finditer(regex, expr))
         return expr
 
     def put_space(self, expr):
@@ -184,6 +237,20 @@ class Parser:
                 expr = expr.replace(elem.group(), " {} ".format(elem.group()))
             op.append(elem.group())
         return expr
+
+    def split(self, expr):
+        matches = re.finditer(self.re_operator, expr)
+        tokens = []
+        tmp = 0
+        for elem in matches:
+            begin, end = elem.span()
+            tokens.append(expr[tmp:begin])
+            tokens.append(elem.group())
+            tmp = end
+        tokens.append(expr[tmp:])
+        for i in range(len(tokens)):
+            tokens[i] = tokens[i].strip()
+        return tokens
 
     def str_to_matrix(self, mat):
         if isinstance(mat, str) is False:
@@ -215,7 +282,7 @@ class Parser:
         if n == 0:
             return Complex(im=1)
         elif n == 1:
-            if comp[matches[0].span()[1]] == '*':
+            if comp[matches[0].span()[1]] == '*' or comp[matches[0].span()[1]] == 'i':
                 return Complex(im=float(matches[0].group()))
             return Complex(real=float(matches[0].group()), im=1)
         return Complex(real=float(matches[0].group()), im=float(matches[1].group()))
@@ -242,9 +309,7 @@ class Parser:
 
     def do_operation(self, x1, x2, op):
         if isinstance(x1, str) or isinstance(x2, str):
-            raise TypeError("operation between '{}' and '{}' not supported"
-                            .format(type(x1).__name__, type(x2).__name__))
-        print(x1, op, x2)
+            return "{}{}{}".format(x1, op, x2)
         if op == '+':
             result = x1 + x2
         elif op == '-':

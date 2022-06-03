@@ -7,13 +7,13 @@ from utils import isnumber
 
 class Function:
     def __init__(self, expr, data, unknown='x'):
+        print(expr)
         if isinstance(expr, str) is False:
             raise TypeError('Function: Type {} not supported'.format(type(expr).__name__))
         try:
             zero_polynomial = Polynomial(expr.replace(unknown, 'X') + '= 0', unknown)
         except ValueError:
             raise ValueError('Function: Invalid expression syntax')
-        print(expr)
         self.coefs = zero_polynomial.coefs
         self.degree = zero_polynomial.degree
         self.unknown = unknown
