@@ -1,8 +1,4 @@
-from ast import Param, expr
-import sys, signal, string
 from parser import Parser
-from unicodedata import name
-
 from ft_matrix import Matrix
 
 class str_type:
@@ -93,14 +89,7 @@ def cli(data, cmd):
     return data
 
 
-def handle_signal(signum, frame):
-    if signum == signal.SIGINT:
-        sys.stdout.write('\nUse quit to exit.\n> ')
-        return
-    
-
 if __name__ == "__main__":
-    signal.signal(signal.SIGINT,handle_signal)
     cmd_list = []
     data = {}
     while True:
@@ -109,6 +98,11 @@ if __name__ == "__main__":
         except EOFError:
             print()
             break
+        except KeyboardInterrupt:
+            sys.stdout.write('\nUse quit to exit.\n')
+            continue
+        if len(cmd.replace(' ', '')) == 0:
+            continue
         cmd_list.append(cmd)
         cmd = cmd.replace(' ', '')
         if cmd == "quit":

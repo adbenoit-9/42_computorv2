@@ -4,4 +4,4 @@ from parser import Parser
 import sys
 
 p = Parser({})
-print(p.decompose(sys.argv[1]))
+print(p.reduce(sys.argv[1]))

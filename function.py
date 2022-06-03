@@ -6,22 +6,22 @@ from utils import isnumber
 
 
 class Function:
-    def __init__(self, expr, data, unknown='x'):
-        print(expr)
+    def __init__(self, expr, decomposed, unknown='x'):
         if isinstance(expr, str) is False:
             raise TypeError('Function: Type {} not supported'.format(type(expr).__name__))
         try:
-            zero_polynomial = Polynomial(expr.replace(unknown, 'X') + '= 0', unknown)
+            zero_polynomial = Polynomial(decomposed.replace(unknown, 'X') + '= 0', unknown)
         except ValueError:
             raise ValueError('Function: Invalid expression syntax')
+        print(expr)
         self.coefs = zero_polynomial.coefs
         self.degree = zero_polynomial.degree
         self.unknown = unknown
+        self.expr = expr
 
     def image(self, x):
         if isinstance(x, str):
-            self.unknown = x
-            return self
+            return self.expr.replace(self.unknown, x)
         if isinstance(x, Complex):
             tab = [Complex()] * len(self.coefs)
         elif isinstance(x, Matrix):
@@ -40,12 +40,12 @@ class Function:
         Resolves f(x) = y
         '''
         self.unknown = unknown
-        expr = str(self)
+        expr = repr(self)
         print('{} = {}'.format(expr, y))
         eq = Polynomial('{} = {}'.format(expr.replace(self.unknown, 'X'), y), self.unknown)
         eq.resolve()
     
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         expr = ""
         for i, coef in enumerate(self.coefs):
             if coef < 0:
@@ -54,3 +54,6 @@ class Function:
                 expr += ' + '
             expr += '{} * {}^{}'.format(coef, self.unknown, i)
         return expr
+
+    def __str__(self):
+        return self.expr

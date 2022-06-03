@@ -28,13 +28,13 @@ stockage data: `dictionary`
     - [x] real type
     - [x] matrix type
     - [x] function type
-    - [ ] complex type
-    - [ ] decomposition: pas sure que ca soit la bonne solution
+    - [x] complex type
+    - [-] decomposition: (gere pas < 0)
 
 - priority:
     - [x] mul/div/mod
     - [x] bracket calc
-    - [ ] bracket function
+    - [x] bracket function
 
 - [x] exit program : quit and CTRL+D
 
@@ -43,7 +43,9 @@ stockage data: `dictionary`
     - [x] x^2^3 = x^(2 * 3)
     - [ ] f(x) = 7 + i
     - [ ] f(x) = i ?
-    - [ ] (3 + 8i) * 2
+    - [x] (3 + 8i) * 2
+    - [ ] x*(3-4)
+    - [ ] f(3+4)
 
 ---
 # example

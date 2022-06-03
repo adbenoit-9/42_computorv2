@@ -1,4 +1,5 @@
 from dataclasses import replace
+from functools import reduce
 import math
 from multiprocessing.sharedctypes import Value
 from tracemalloc import start
@@ -10,14 +11,6 @@ import re
 
 class Parser:
     '''Parse a mathematic expression.'''
-    ERROR = -1,
-    BEGIN = 0,
-    MUL = 1,
-    DIV = 2,
-    MOD = 3,
-    ADD = 4,
-    SUB = 5,
-    END = 10
 
     def __init__(self, data) -> None:
         self.expr = None
@@ -34,18 +27,17 @@ class Parser:
                 isinstance(expr_type, str) is False or \
                 expr_type not in type_list:
             raise ValueError('Parser: invalid argument')
-        self.state = self.BEGIN
         self.type = expr_type
         self.param = param
         self.expr = expr
         self.format_expr = self.format(expr)
+        decomposed = self.decompose(self.format_expr)
+        print(decomposed)
         if expr_type in type_list[:3]:
-            print(self.put_space(self.format_expr))
-            expr = self.decompose(self.format_expr)
             expr = self.put_space(self.format_expr)
-            return Function(expr, self.data, param)
+            return Function(expr, decomposed, param)
         else:
-            return self.calculate(self.decompose(expr))
+            return self.calculate(decomposed)
 
 
     def decompose(self, expr):
@@ -155,27 +147,26 @@ class Parser:
 
     def reduce(self, expr):
         regex = r"(?P<x1>[-]{,1}[\w\^\.\[\],;]+)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)(?P<x2>[-]{,1}[\w\^\.\[\],;]+)"
-        unknown = None
         match = re.search(regex, expr)
-        while match is not None:
-            operation = match.group()
-            result = operation
-            try:
-                x1 = self.str_to_value(match.group('x1'))
-                x2 = self.str_to_value(match.group('x2'))
-                op = match.group('op')
-                x = self.do_operation(x1, x2,op)
-                result = '{}{}'.format(x, result[match.span()[1]:])
-            except TypeError:
-                unknown = op
-                unknown += x1 if isinstance(x1, str) else x2
-                result = (str(x2) if isinstance(x1, str) else str(x1)) + result[match.span()[1]:]
-            match = re.search(regex, result)
-        if unknown is not None:
-            result += unknown
-        expr = expr.replace(operation, result)
+        if match is None:
+            return expr
+        operation = match.group()
+        result = operation
+        x1 = self.str_to_value(match.group('x1'))
+        x2 = self.str_to_value(match.group('x2'))
+        op = match.group('op')
+        result = self.do_operation(x1, x2,op)
+        expr = expr.replace(operation, str(result))
+        if isinstance(result, str):
+            size = len(x1) if isinstance(x1, str) else len(x2)
+            rest = expr[match.span()[1]:]
+            if len(rest):
+                size = len(x1) if isinstance(x1, str) else len(x2)
+                rest = expr[match.span()[1] - size:]
+                return expr.replace(rest, self.reduce(rest))
+            return expr
         expr = self.rm_useless_brackets(expr)
-        return expr
+        return self.reduce(expr)
 
     def format(self, expr):
         if isinstance(expr, str) is False:
@@ -185,11 +176,7 @@ class Parser:
         expr = self.replace_funct(expr)
         expr = self.calculate_pow(expr)
         expr = self.rm_useless_brackets(expr)
-        regex = r"[-]{,1}[\w\^\.\[\],;]+([^\w\^\.\(\)\[\],;\-\+]+[-]{,1}[\w\^\.\[\],;]+)+"
-        matches = list(re.finditer(regex, expr))
-        while len(matches):
-            expr = self.reduce(expr)
-            matches = list(re.finditer(regex, expr))
+        expr = self.reduce(expr)
         expr = self.replace_funct(expr)
         return expr
         
@@ -202,14 +189,15 @@ class Parser:
             if token in '-+':
                 op = token
                 continue
+            if token in '*/%':
+                return expr
             value = self.str_to_value(token)
             if op is not None:
-                try:
-                    result = self.do_operation(result, value, op)
-                except TypeError as err:
-                    raise ValueError(err)
+                result = self.do_operation(result, value, op)
             else:
                 result = value
+        if op is None:
+            return expr
         return result
 
     # UTILS
@@ -308,8 +296,10 @@ class Parser:
             return x
 
     def do_operation(self, x1, x2, op):
-        if isinstance(x1, str) or isinstance(x2, str):
+        if isinstance(x2, str):
             return "{}{}{}".format(x1, op, x2)
+        elif isinstance(x1, str):
+            return "{}{}{}".format(x2, op, x1)
         if op == '+':
             result = x1 + x2
         elif op == '-':
