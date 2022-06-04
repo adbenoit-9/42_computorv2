@@ -29,7 +29,7 @@ stockage data: `dictionary`
     - [x] matrix type
     - [x] function type
     - [x] complex type
-    - [x] decomposition: (gere pas < 0)
+    - [x] decomposition
 
 - priority:
     - [x] mul/div/mod
