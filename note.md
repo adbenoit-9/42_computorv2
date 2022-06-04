@@ -23,13 +23,13 @@ stockage data: `dictionary`
 
 - expression:
     - [x] name format
-    - [x] replace var in simple calcul
+    - [x] replace var in calcul
     - [x] replace var in function
     - [x] real type
     - [x] matrix type
     - [x] function type
     - [x] complex type
-    - [-] decomposition: (gere pas < 0)
+    - [x] decomposition: (gere pas < 0)
 
 - priority:
     - [x] mul/div/mod
