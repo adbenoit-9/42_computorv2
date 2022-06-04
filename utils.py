@@ -21,8 +21,8 @@ def rm_useless_brackets(expr):
         change = 0
         for elem in matches:
             span = elem.span()
-            if (span[0] == 0 or expr[span[0] - 1] not in "*%/)^") and \
-                    (span[1] == len(expr) or expr[span[1]] not in "*%/(^"):
+            if (span[0] == 0 or expr[span[0] - 1] in "(+-") and \
+                    (span[1] == len(expr) or expr[span[1]] in "+-)"):
                 expr = expr.replace(elem.group(), elem.group()[1:-1])
                 change = 1
                 break

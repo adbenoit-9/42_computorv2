@@ -1,7 +1,8 @@
+from dataclasses import replace
 import math
 from function import Function
 from ft_matrix import Matrix
-from ft_complex import Complex
+from ft_complex import Complex, isrealnumber
 from utils import rm_useless_brackets
 import re
 from calculator import calculator, do_operation
@@ -21,6 +22,7 @@ class Parser:
         expr = expr.replace(' ', '')
         expr = self.replace_var(expr)
         expr = self.replace_funct(expr)
+        expr = self.replace_funct(expr)
         expr = self.calculate_pow(expr)
         expr = rm_useless_brackets(expr)
         expr = self.reduce(expr)
@@ -38,7 +40,7 @@ class Parser:
             'abs': abs,
             'sqrt': math.sqrt,
         }
-        matches = re.finditer(r"(?P<name>[\w_]+)[\(](?P<param>.*)[\)]", expr)
+        matches = re.finditer(r"(?P<name>[\w_]+)[\(](?P<param>[^\(\)]*)[\)]", expr)
         for match in matches:
             funct = match.group()
             name = match.group('name')
@@ -50,15 +52,17 @@ class Parser:
             if len(param) == 0:
                 raise ValueError('function parameter not found.')
             param = self.str_to_value(param)
-            if isinstance(param, str): 
+            if isinstance(param, str):
+                print(name, param)
                 param = calculator(param, self)
-            if name in math_funct.keys():
+            if name in math_funct.keys() and isrealnumber(param):
                 value = math_funct[name](param)
+                expr = expr.replace(funct, str(value))
             elif name in self.data.keys():
                 value = "({})".format(self.data[name].image(param))
+                expr = expr.replace(funct, str(value))
             elif name not in math_funct:
                 raise ValueError("function '{}' is undefined.".format(name))
-            expr = expr.replace(funct, str(value))
         return expr
 
     def replace_var(self, expr):

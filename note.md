@@ -47,6 +47,7 @@ stockage data: `dictionary`
     - [x] x*(3-4)
     - [x] f(3+4)
     - [x] (4+x)^2 + 3
+    - [x] f(x)=tan(x)
 
 ---
 # example
