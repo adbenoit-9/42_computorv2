@@ -27,7 +27,7 @@ def cli(data, cmd):
             raise ValueError('Invalid command line')
         if name not in data.keys():
             raise ValueError("Function '{}' not defined".format(name))
-        data[name].resolve(cmd[1][:-1], param)
+        data[name].resolve(param, cmd[1][:-1], parser)
         return None
     elif len(cmd) == 2:
         name, param = isfunction(cmd[0])
@@ -69,7 +69,8 @@ def main():
             return 0
         try:
             result = cli(data, cmd)
-            print(result)
+            if result is not None:
+                print(result)
         except ValueError as err:
             print(err)
     return 0

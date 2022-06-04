@@ -71,21 +71,16 @@ class Polynomial:
                 num = data['b'] + data['sqrt_delta']
             if isinstance(num, int) or num.is_integer():
                 num = int(num)
-                print(form4.format(k=data['k'], num=num, denom=denom))
             ret, k = pgcd(denom, num)
             if ret is True:
                 num = int(num / k)
                 denom = int(denom / k)
-                if denom != 1 and num != 0:
-                    print(form4.format(k=data['k'], num=num, denom=denom))
-            elif denom != 1 and num != 0:
-                print(form4.format(k=data['k'], num=num, denom=denom))
+            if denom != 1 and num != 0 and isinstance(num, int):
+                print(form4.format(**data, num=num, denom=denom))
             result = num / denom
             if result.is_integer():
                 result = int(result)
-            print(form5.format(k=data['k'], result=result))
-            if i == 0:
-                print('')
+            print(form5.format(**data, result=result))
 
     def negative_delta_step(self, delta):
         form3 = "{unknown}{k} = {b} / {d1} {sign} i * sqrt({delta}) / {d2}"
@@ -118,8 +113,6 @@ class Polynomial:
                 print(form4.format(**data, d1=d1, d2=d2))
             else:
                 print(form3.format(**data, d1=d1, d2=d2))
-            if i == 0:
-                print('')
 
     def show_step(self, delta):
         if isinstance(delta, float) and delta.is_integer():

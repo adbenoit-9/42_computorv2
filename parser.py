@@ -2,6 +2,7 @@ import math
 from function import Function
 from ft_matrix import Matrix
 from ft_complex import Complex
+from utils import rm_useless_brackets
 import re
 from calculator import calculator, do_operation
 
@@ -21,12 +22,12 @@ class Parser:
         expr = self.replace_var(expr)
         expr = self.replace_funct(expr)
         expr = self.calculate_pow(expr)
-        expr = self.rm_useless_brackets(expr)
+        expr = rm_useless_brackets(expr)
         expr = self.reduce(expr)
         regex = r"[\d\^\.\[\],;]+[^\w\^\.\(\)\[\],;\-\+]+[\d\^\.\[\],;]+"
         while re.search(regex, expr) is not None:
             expr = self.reduce(expr)
-        return expr
+        return self.put_space(expr)
 
     def replace_funct(self, expr):
         math_funct = {
@@ -109,26 +110,11 @@ class Parser:
                 rest = expr[match.span()[1] - size:]
                 return expr.replace(rest, self.reduce(rest))
             return expr
-        expr = self.rm_useless_brackets(expr)
+        expr = rm_useless_brackets(expr)
         return self.reduce(expr)
 
-    def rm_useless_brackets(self, expr):
-        regex = r"\([^\(\)]*\)"
-        matches = list(re.finditer(regex, expr))
-        change = 1
-        while len(matches) and change:
-            change = 0
-            for elem in matches:
-                span = elem.span()
-                if (span[0] == 0 or expr[span[0] - 1] not in "*%/)") and \
-                        (span[1] == len(expr) or expr[span[1]] not in "*%/("):
-                    expr = expr.replace(elem.group(), elem.group()[1:-1])
-                    change = 1
-            matches = list(re.finditer(regex, expr))
-        return expr
-
     def put_space(self, expr):
-        matches = re.finditer(self.re_operator, expr)
+        matches = re.finditer(r"[^\w\^\.\(\)\[\],;]+", expr)
         op = []
         for elem in matches:
             if elem.group() not in op:

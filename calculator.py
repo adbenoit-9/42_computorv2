@@ -48,8 +48,9 @@ def split_operation(expr):
 
 
 def calculator(expr, parser):
+    tmp = parser.start(expr)
+    expr = decompose(tmp)
     expr = parser.start(expr)
-    expr = decompose(expr)
     tokens = split_operation(expr)
     result = 0
     value = 0
@@ -59,7 +60,7 @@ def calculator(expr, parser):
             op = token
             continue
         if token in '*/%':
-            return expr
+            return tmp
         value = parser.str_to_value(token)
         if op is not None:
             result = do_operation(result, value, op)
