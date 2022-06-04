@@ -48,6 +48,7 @@ def split_operation(expr):
 
 
 def calculator(expr, parser):
+    expr = parser.start(expr)
     expr = decompose(expr)
     tokens = split_operation(expr)
     result = 0

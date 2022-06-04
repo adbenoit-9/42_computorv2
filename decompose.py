@@ -24,7 +24,6 @@ def get_factored_expr(expr):
         for i in range(end + 1, len(expr)):
             if expr[i] in "+-":
                 x2 = expr[end + 1:i]
-                print(x1, op, x2)
                 return expr[begin:i + 1], [x1, op, x2]
         return expr[begin:], [x1, op, expr[end + 1:]]
     return expr[begin:end], [expr[begin + 1:end - 1], '*', '1']
@@ -34,11 +33,10 @@ def power_to_mul(expr, power):
     new_expr = ""
     try:
         power = int(power)
-        print(power)
         for i in range(power):
             if i != 0:
                 new_expr += '*'
-            new_expr += power
+            new_expr += expr
         return new_expr
     except Exception:
         raise ValueError('non-decomposable expression')

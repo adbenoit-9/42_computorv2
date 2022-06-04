@@ -20,8 +20,7 @@ def cli(data, cmd):
     cmd = cmd.split('=')
     parser = Parser(data)
     if len(cmd) == 1 or cmd[1] == '?':
-        result = parser.start(cmd[0])
-        result = calculator(result, parser)
+        result = calculator(cmd[0], parser)
     elif cmd[1].endswith('?'):
         name, param = isfunction(cmd[0])
         if param == None:
@@ -37,10 +36,10 @@ def cli(data, cmd):
                 raise ValueError("variable name '{}' is invalid".format(name))
         if name in ['i', 'cos', 'sin', 'tan', 'abs', 'sqrt']:
             raise ValueError("variable name '{}' is invalid".format(name))
-        expr = parser.start(cmd[1])
         if param is None:
-            data[name] = calculator(expr, parser)
+            data[name] = calculator(cmd[1], parser)
         else:
+            expr = parser.start(cmd[1])
             data[name] = Function(expr, param)
         result = data[name]
     else:

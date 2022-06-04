@@ -43,7 +43,6 @@ class Matrix:
 
     def __add__(self, v):
         if isinstance(v, Matrix) is False or self.shape != v.shape:
-            print(self, v)
             raise ValueError("addition between matrix of differents dimensions not supported.")
         res = self.copy()
         for i, row in enumerate(v.values):
@@ -68,7 +67,6 @@ class Matrix:
 
     def __mul__(self, n):
         if isinstance(n, Matrix):
-            print(n)
             if self.shape != n.shape:
                 raise ValueError("term-to-term multiplication between matrix of differents dimensions not supported.")
             res = self.copy()

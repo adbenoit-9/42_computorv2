@@ -23,6 +23,9 @@ class Parser:
         expr = self.calculate_pow(expr)
         expr = self.rm_useless_brackets(expr)
         expr = self.reduce(expr)
+        regex = r"[\d\^\.\[\],;]+[^\w\^\.\(\)\[\],;\-\+]+[\d\^\.\[\],;]+"
+        while re.search(regex, expr) is not None:
+            expr = self.reduce(expr)
         return expr
 
     def replace_funct(self, expr):
@@ -47,7 +50,7 @@ class Parser:
                 raise ValueError('function parameter not found.')
             param = self.str_to_value(param)
             if isinstance(param, str): 
-                param = calculator(self.start(param), self)
+                param = calculator(param, self)
             if name in math_funct.keys():
                 value = math_funct[name](param)
             elif name in self.data.keys():
