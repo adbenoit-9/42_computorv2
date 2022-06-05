@@ -10,7 +10,7 @@ def get_factored_expr(expr):
     match = expr[begin:]
     end = match.find(')')
     if end == -1:
-        raise ValueError("')' is missing")
+        raise ValueError("syntax error")
     end += begin + 1
     if begin > 0 and expr[begin - 1] in '*/^':
         x2 = expr[begin + 1:end - 1]
@@ -24,7 +24,8 @@ def get_factored_expr(expr):
                 if expr[i] == '(':
                     x1 = expr[i:begin - 1]
                 else:
-                    x1 = expr[i:begin - 2]
+                    i += 1
+                    x1 = expr[i:begin - 1]
                 return expr[i:end], [x1, op, x2]
         return expr[:end], [expr[:begin - 1], op, x2]
     elif end < len(expr) and expr[end] in '*/^':
@@ -32,6 +33,8 @@ def get_factored_expr(expr):
         op = expr[end]
         for i in range(end + 1, len(expr)):
             if expr[i] in "+-)(":
+                if expr[i] == '-' and i == end + 1:
+                    continue
                 x2 = expr[end + 1:i]
                 return expr[begin:i], [x1, op, x2]
         return expr[begin:], [x1, op, expr[end + 1:]]
@@ -59,6 +62,13 @@ def add_plus(expr):
     expr = expr.replace(match.group(), new_expr)
     return add_plus(expr)
 
+def op_to_str(x1, x2, op):
+    if x2 == "1":
+        return x1
+    elif op == '*':
+        if x1 == "1":
+            return x2
+    return x1 + op + x2
 
 def decompose(expr):
     expr = expr.replace(' ', '')
@@ -88,8 +98,6 @@ def decompose(expr):
             for k in range(len(tokens[i])):
                 if len(new_expr):
                     new_expr += '+'
-                new_expr += tokens[i - 1][j] + op + tokens[i][k]
-    # print(expr)
+                new_expr += op_to_str(tokens[i - 1][j], tokens[i][k], op)
     expr = expr.replace(match, '({})'.format(new_expr))
-    # print(expr)
     return decompose(expr)

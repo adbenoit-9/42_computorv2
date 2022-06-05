@@ -162,11 +162,11 @@ class Complex:
         if self.real != 0:
             s += str(self.real)
         if self.im > 0 and self.real:
-            s += '+'
+            s += '+'                                            
         if self.im < 0 and self.real:
             s += '-'
         if abs(self.im) != 1 and self.im:
-            s += str(abs(self.im))
+            s += str(abs(self.im)) + '*'
         if self.im:
             s += 'i'
         if self.real == 0 and self.im == 0:

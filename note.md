@@ -11,11 +11,11 @@ stockage data: `dictionary`
     - [ ] resolve
         - [x] y is real
         - [ ] y is complex
-        - [ ] y is matrix: error
+        - [x] y is matrix: error
         - [x] replace X by the parameter name
     - [ ] calculate image
         - [x] x is real
-        - [ ] x is complex
+        - [x] x is complex
         - [x] x is matrix
         - [x] x is calc
         - [x] x formula
@@ -23,7 +23,7 @@ stockage data: `dictionary`
 
 - expression:
     - [x] name format
-    - [x] replace var in calcul
+    - [x] replace var in simple calcul
     - [x] replace var in function
     - [x] real type
     - [x] matrix type
@@ -43,11 +43,12 @@ stockage data: `dictionary`
     - [x] x^2^3 = x^(2 * 3)
     - [ ] f(x) = 7 + i*x => f(2+x)
     - [ ] f(x) = i ?
-    - [ ] (3 + 8i) * 2
+    - [x] (3 + 8i) * 2
     - [x] x*(3-4)
     - [x] f(3+4)
     - [x] (4+x)^2 + 3
     - [x] f(x)=tan(x)
+    - [x] 16+4*1+4*1+1^2+3
 
 ---
 # example

@@ -4,10 +4,12 @@ from decompose import decompose
 
 
 def do_operation(x1, x2, op):
+    if isinstance(x1, str) or isinstance(x2, str):
+        if op == "^":
+            return "{}{}{}".format(x1, op, x2)
     if isinstance(x2, str):
         return "{}{}{}".format(x1, op, x2)
     elif isinstance(x1, str):
-
         return "{}{}{}".format(x2, op, x1)
     if op == '+':
         result = x1 + x2
@@ -33,14 +35,16 @@ def do_operation(x1, x2, op):
 
 
 def split_operation(expr):
-    matches = re.finditer(r"[^\w\^\.\(\)\[\],;]+", expr)
+    matches = re.finditer(r"[+-]", expr)
     tokens = []
     tmp = 0
     for elem in matches:
         begin, end = elem.span()
-        tokens.append(expr[tmp:begin])
-        tokens.append(elem.group())
-        tmp = end
+        if begin != 0 and expr[begin - 1] not in "*/%^":
+            if begin != 0:
+                tokens.append(expr[tmp:begin])
+            tokens.append(elem.group())
+            tmp = end
     tokens.append(expr[tmp:])
     for i in range(len(tokens)):
         tokens[i] = tokens[i].strip()
@@ -48,24 +52,36 @@ def split_operation(expr):
 
 
 def calculator(expr, parser):
-    tmp = parser.start(expr)
-    expr = decompose(tmp)
     expr = parser.start(expr)
+    expr = decompose(expr)
+    expr = parser.start(expr)
+    expr = parser.start(expr) # pk il faut mettre une deuxieme fois ? (3 + 8i) * 2
     tokens = split_operation(expr)
     result = 0
     value = 0
     op = None
+    tmp = []
     for token in tokens:
         if token in '-+':
             op = token
             continue
-        if token in '*/%':
-            return tmp
         value = parser.str_to_value(token)
-        if op is not None:
+        if isinstance(value, str):
+            if op is not None:
+                tmp.append(op + value)
+            else:
+                tmp.append('+' + value)
+        elif op is not None:
             result = do_operation(result, value, op)
         else:
             result = value
     if op is None:
         return expr
-    return result
+    result = str(result) if result != 0 else ""
+    for val in tmp:
+        result += val
+    if len(result) == 0:
+        result = "0"
+    if result[0] == '+':
+        result = result[1:]
+    return parser.put_space(result)

@@ -2,7 +2,7 @@ from parser import Parser
 from calculator import calculator
 from ft_matrix import Matrix
 from function import Function
-import string
+import string, re
 
 
 def isfunction(expr):
@@ -11,8 +11,31 @@ def isfunction(expr):
         return expr, None
     end = expr.find(')')
     if end != len(expr) - 1:
-        raise ValueError('Invalid command line')
+        raise ValueError('syntax error')
     return expr[:index], expr[index + 1:end]
+
+
+def parse_result(result, parser):
+    if isinstance(result, str) is False:
+        if isinstance(result, Matrix):
+            return result.__repr__()
+        return result
+    tmp = parser.str_to_matrix(result)
+    if tmp is not None:
+        return tmp.__repr__()
+    tmp = parser.str_to_complex(result)
+    if tmp is not None:
+        return tmp.__repr__()
+    regex = r"[\w\_\+\-\*\/\(\)\[\];,\.\%\^]+"
+    match = re.fullmatch(regex, result)
+    if match is None:
+        raise ValueError('syntax error')
+    i = result.count('(') - result.count(')')
+    j = result.count('[') - result.count(']')
+    if i != 0 or j != 0:
+        raise ValueError('syntax error')
+    return result
+    
 
 
 
@@ -24,7 +47,7 @@ def cli(data, cmd):
     elif cmd[1].endswith('?'):
         name, param = isfunction(cmd[0])
         if param == None:
-            raise ValueError('Invalid command line')
+            raise ValueError('syntax error')
         if name not in data.keys():
             raise ValueError("Function '{}' not defined".format(name))
         data[name].resolve(param, cmd[1][:-1], parser)
@@ -40,13 +63,12 @@ def cli(data, cmd):
             data[name] = calculator(cmd[1], parser)
         else:
             expr = parser.start(cmd[1])
-            data[name] = Function(expr, param)
+            data[name] = Function(parser, expr, param)
         result = data[name]
     else:
-        raise ValueError('Invalid command line')
-    if isinstance(result, Matrix):
-        return result.__repr__()
-    return str(result)
+        raise ValueError('syntax error')
+    result = parse_result(result, parser)
+    return result
 
 
 def main():

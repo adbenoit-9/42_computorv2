@@ -1,3 +1,4 @@
+from pprint import pprint
 from ft_complex import Complex
 from ft_matrix import Matrix
 from parser import Parser
@@ -6,5 +7,6 @@ from decompose import decompose
 
 # p = Parser({})
 # print(p.reduce(sys.argv[1]))
-print(decompose(sys.argv[1]))
-
+# print(decompose(sys.argv[1]))
+expr = Parser().reduce(sys.argv[1])
+print(expr)

@@ -20,16 +20,18 @@ class Parser:
         if isinstance(expr, str) is False:
             raise ValueError('Parser: invalid argument')
         expr = expr.replace(' ', '')
+        expr = self.put_mul(expr)
         expr = self.replace_var(expr)
         expr = self.replace_funct(expr)
         expr = self.replace_funct(expr)
+        expr = self.put_pow(expr)
         expr = self.calculate_pow(expr)
         expr = rm_useless_brackets(expr)
         expr = self.reduce(expr)
-        regex = r"[\d\^\.\[\],;]+[^\w\^\.\(\)\[\],;\-\+]+[\d\^\.\[\],;]+"
+        regex = r"[\d\^\.\[\],;]+[^\w\^\.\(\)\[\],;\-\+]+[-]{,1}[\d\^\.\[\],;]+"
         while re.search(regex, expr) is not None:
             expr = self.reduce(expr)
-        return self.put_space(expr)
+        return expr
 
     def replace_funct(self, expr):
         math_funct = {
@@ -53,7 +55,6 @@ class Parser:
                 raise ValueError('function parameter not found.')
             param = self.str_to_value(param)
             if isinstance(param, str):
-                print(name, param)
                 param = calculator(param, self)
             if name in math_funct.keys() and isrealnumber(param):
                 value = math_funct[name](param)
@@ -64,6 +65,16 @@ class Parser:
             elif name not in math_funct:
                 raise ValueError("function '{}' is undefined.".format(name))
         return expr
+
+    def put_mul(self, expr):
+        expr = expr.replace(')(', ')*(')
+        regex = r"(?P<x1>[\d\[\]\;\,\.]+)(?P<x2>[A-Za-z]+)"
+        match = re.search(regex, expr)
+        if match is None:
+            return expr
+        expr = expr.replace(match.group(), "{}*{}"
+                            .format(match.group('x1'), match.group('x2')))
+        return self.put_mul(expr)
 
     def replace_var(self, expr):
         matches = re.finditer(r"[\w_]+", expr)
@@ -78,7 +89,7 @@ class Parser:
         return new_expr
 
     def calculate_pow(self, expr):
-        regex = r"(?P<x1>[\d\.]+)[\^](?P<x2>[\d\.]+)"
+        regex = r"(?P<x1>[+-]{,1}[\d\.]+|i)[\^](?P<x2>[-+]{,1}[\d\.]+)"
         tmp = 0
         calc = re.search(regex, expr)
         new_expr = expr
@@ -90,32 +101,61 @@ class Parser:
                 x = do_operation(x1, x2, '*')
             else:
                 x = do_operation(x1, x2, '^')
-            new_expr = '{}{}{}'.format(new_expr[:start], x, new_expr[end:])
+            if x > 0 and (start == 0 or new_expr[start - 1] not in '*/%^'):
+                new_expr = '{}+{}{}'.format(new_expr[:start], x, new_expr[end:])
+            else:
+                new_expr = '{}{}{}'.format(new_expr[:start], x, new_expr[end:])
             calc = re.search(regex, new_expr)
         return new_expr
 
+    def put_pow(self, expr):
+        regex = r"[\w\^\.]+([*][\w\^\.])+"
+        matches = re.finditer(regex, expr)
+        for match in matches:
+            tokens = match.group().split('*')
+            new_expr = ""
+            use = []
+            for token in tokens:
+                if token not in use:
+                    i = match.group().count(token)
+                    use.append(token)
+                    if len(new_expr) != 0:
+                        new_expr += '*'
+                    if i > 1:
+                        new_expr += "{}^{}".format(token,i)
+                    else:
+                        new_expr += token
+            expr = expr.replace(match.group(), new_expr)
+        return expr
+                
     def reduce(self, expr):
         regex = r"(?P<x1>[-]{,1}[\w\^\.\[\],;]+)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)(?P<x2>[-]{,1}[\w\^\.\[\],;]+)"
-        match = re.search(regex, expr)
-        if match is None:
+        matches = list(re.finditer(regex, expr))
+        if len(matches) == 0:
             return expr
-        operation = match.group()
-        result = operation
-        x1 = self.str_to_value(match.group('x1'))
-        x2 = self.str_to_value(match.group('x2'))
-        op = match.group('op')
-        result = do_operation(x1, x2,op)
-        expr = expr.replace(operation, str(result))
-        if isinstance(result, str):
-            size = len(x1) if isinstance(x1, str) else len(x2)
-            rest = expr[match.span()[1]:]
-            if len(rest):
-                size = len(x1) if isinstance(x1, str) else len(x2)
-                rest = expr[match.span()[1] - size:]
-                return expr.replace(rest, self.reduce(rest))
-            return expr
-        expr = rm_useless_brackets(expr)
-        return self.reduce(expr)
+        for match in matches:
+                operation = match.group()
+                result = operation
+                x1 = match.group('x1')
+                x2 = match.group('x2')
+                if x1 != "i":
+                    x1 = self.str_to_value(x1)
+                if x2 != "i":
+                    x2 = self.str_to_value(x2)
+                op = match.group('op')
+                result = do_operation(x1, x2, op)
+                print(result)
+                expr = expr.replace(operation, str(result))
+                if isinstance(result, str):
+                    size = len(x1) if isinstance(x1, str) else len(x2)
+                    rest = expr[match.span()[1]:]
+                    if len(rest):
+                        size = len(x1) if isinstance(x1, str) else len(x2)
+                        rest = expr[match.span()[1] - size:]
+                        return expr.replace(rest, self.reduce(rest))
+                    return expr
+                expr = rm_useless_brackets(expr)
+        return expr.replace('+-', '-')
 
     def put_space(self, expr):
         matches = re.finditer(r"[^\w\^\.\(\)\[\],;]+", expr)
@@ -124,7 +164,7 @@ class Parser:
             if elem.group() not in op:
                 expr = expr.replace(elem.group(), " {} ".format(elem.group()))
             op.append(elem.group())
-        return expr
+        return expr.strip()
 
     def str_to_matrix(self, mat):
         if isinstance(mat, str) is False:

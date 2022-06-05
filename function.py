@@ -6,11 +6,13 @@ import re
 
 
 class Function:
-    def __init__(self, expr, x='x'):
+    def __init__(self, parser, expr, x='x'):
         if isinstance(expr, str) is False:
             raise ValueError('Function: Type {} not supported'.format(type(expr).__name__))
-        self.expr = expr
         self.x = x
+        self.expr = expr
+        self.decomposed = decompose(self.expr)
+        self.decomposed = parser.start(self.decomposed)
 
     def image(self, x):
         if isinstance(x, str) or isinstance(x, Complex):
@@ -30,15 +32,7 @@ class Function:
             else:
                 print("No solution.")
             return
-        expr = decompose(self.expr)
-        expr = parser.start(expr)
-        regex = self.x + r"( \* " + self.x + ")+"
-        match = re.search(regex, expr)
-        while match is not None:
-            i = match.group().count(self.x)
-            expr = expr.replace(match.group(), "{}^{}".format(self.x, i))
-            match = re.search(regex, expr)
-        expr = expr.replace(self.x, x)
+        expr = self.decomposed
         print('{} = {}'.format(expr, y))
         expr = expr.replace(x, 'X')
         eq = Polynomial('{} = {}'.format(expr, y), x)
