@@ -7,8 +7,15 @@ import re
 
 class Function:
     def __init__(self, parser, expr, x='x'):
-        if isinstance(expr, str) is False:
-            raise ValueError('Function: Type {} not supported'.format(type(expr).__name__))
+        if isinstance(expr, str) is False or isinstance(x, str) is False:
+            raise ValueError('Function: type error')
+        if x.isalpha() is False:
+            raise ValueError("parameter '{}' is invalid".format(x))
+        regex = r"[^\d\+\-\*\%\/\^;,\.\[\]\(\)i" + x + "]+"
+        match = re.search(regex, expr)
+        if match is not None and \
+                match.group() not in ['cos', 'sin', 'tan', 'abs', 'sqrt']:
+            raise ValueError("variable '{}' is undefined".format(match.group()))
         self.x = x
         self.expr = expr
         self.decomposed = decompose(self.expr)
@@ -32,6 +39,9 @@ class Function:
             else:
                 print("No solution.")
             return
+        y = parser.start(y)
+        y = decompose(y)
+        y = parser.start(y)
         expr = self.decomposed
         print('{} = {}'.format(expr, y))
         expr = expr.replace(x, 'X')

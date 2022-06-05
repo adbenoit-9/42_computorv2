@@ -8,12 +8,12 @@ stockage data: `dictionary`
 
 - function
     - [x] equation syntax
-    - [ ] resolve
+    - [x] resolve
         - [x] y is real
-        - [ ] y is complex
+        - [x] y is complex
         - [x] y is matrix: error
         - [x] replace X by the parameter name
-    - [ ] calculate image
+    - [x] calculate image
         - [x] x is real
         - [x] x is complex
         - [x] x is matrix
@@ -41,14 +41,14 @@ stockage data: `dictionary`
 - to handle:
     - [x] 7 * x * 6
     - [x] x^2^3 = x^(2 * 3)
-    - [ ] f(x) = 7 + i*x => f(2+x)
-    - [ ] f(x) = i ?
+    - [x] f(x) = 7 + i*x => f(2+x)
     - [x] (3 + 8i) * 2
     - [x] x*(3-4)
     - [x] f(3+4)
     - [x] (4+x)^2 + 3
     - [x] f(x)=tan(x)
     - [x] 16+4*1+4*1+1^2+3
+    - [ ] funB(y) = 43 * y / (4 % 2 * y)
 
 ---
 # example

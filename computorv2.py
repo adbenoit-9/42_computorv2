@@ -10,65 +10,37 @@ def isfunction(expr):
     if index == -1:
         return expr, None
     end = expr.find(')')
-    if end != len(expr) - 1:
+    if end == -1:
         raise ValueError('syntax error')
     return expr[:index], expr[index + 1:end]
 
 
-def parse_result(result, parser):
-    if isinstance(result, str) is False:
-        if isinstance(result, Matrix):
-            return result.__repr__()
-        return result
-    tmp = parser.str_to_matrix(result)
-    if tmp is not None:
-        return tmp.__repr__()
-    tmp = parser.str_to_complex(result)
-    if tmp is not None:
-        return tmp.__repr__()
-    regex = r"[\w\_\+\-\*\/\(\)\[\];,\.\%\^]+"
-    match = re.fullmatch(regex, result)
-    if match is None:
-        raise ValueError('syntax error')
-    i = result.count('(') - result.count(')')
-    j = result.count('[') - result.count(']')
-    if i != 0 or j != 0:
-        raise ValueError('syntax error')
-    return result
-    
-
-
-
 def cli(data, cmd):
-    cmd = cmd.split('=')
-    parser = Parser(data)
-    if len(cmd) == 1 or cmd[1] == '?':
+    parser = Parser(data, cmd)
+    cmd = parser.cmd
+    name, param = isfunction(cmd[0])
+    typ = 'variable' if param is None else 'function'
+    if cmd[1] == '?':
         result = calculator(cmd[0], parser)
     elif cmd[1].endswith('?'):
-        name, param = isfunction(cmd[0])
-        if param == None:
+        if typ != 'function':
             raise ValueError('syntax error')
         if name not in data.keys():
-            raise ValueError("Function '{}' not defined".format(name))
+            raise ValueError("function '{}' not defined".format(name))
         data[name].resolve(param, cmd[1][:-1], parser)
         return None
-    elif len(cmd) == 2:
-        name, param = isfunction(cmd[0])
-        for i in name:
-            if i in string.punctuation:
-                raise ValueError("variable name '{}' is invalid".format(name))
+    else:
+        if name.isalpha() is False:
+            raise ValueError('illegal {} name: {}'.format(t, name))
         if name in ['i', 'cos', 'sin', 'tan', 'abs', 'sqrt']:
-            raise ValueError("variable name '{}' is invalid".format(name))
-        if param is None:
+            raise ValueError('illegal {} name: {}'.format(t, name))
+        if typ == 'variable':
             data[name] = calculator(cmd[1], parser)
         else:
             expr = parser.start(cmd[1])
             data[name] = Function(parser, expr, param)
         result = data[name]
-    else:
-        raise ValueError('syntax error')
-    result = parse_result(result, parser)
-    return result
+    return parser.end(result)
 
 
 def main():

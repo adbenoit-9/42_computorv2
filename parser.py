@@ -11,10 +11,29 @@ from calculator import calculator, do_operation
 class Parser:
     '''Parse a mathematic expression.'''
 
-    def __init__(self, data={}) -> None:
+    def __init__(self, data={}, cmd="") -> None:
+        if isinstance(cmd, str) is False:
+            raise ValueError("Parser: command type '{}' not supported"
+                             .format(type(cmd).__name__))
         if data is None:
             data = {}
         self.data = data
+        regex = r"[^\w\_\+\-\*\/\(\)\[\];,\.\%\^=\?]"
+        match = re.search(regex, cmd)
+        if match is not None:
+            raise ValueError('illegal character: {}'.format(match.group()))
+        i = cmd.count('(') - cmd.count(')')
+        j = cmd.count('[') - cmd.count(']')
+        if i != 0 or j != 0:
+            raise ValueError('syntax error')
+        self.cmd = cmd.lower().split('=')
+        if len(self.cmd) != 2:
+            raise ValueError('syntax error')
+        for i in range(len(self.cmd)):
+            self.cmd[i] = self.cmd[i].strip()
+            if '?' in self.cmd[i]:
+                if i == 0 or '?' in self.cmd[i][:-1]:
+                    raise ValueError('syntax error')
 
     def start(self, expr):
         if isinstance(expr, str) is False:
@@ -32,6 +51,19 @@ class Parser:
         while re.search(regex, expr) is not None:
             expr = self.reduce(expr)
         return expr
+
+    def end(self, result):
+        if isinstance(result, str) is False:
+            if isinstance(result, Matrix):
+                return result.__repr__()
+            return result
+        tmp = self.str_to_matrix(result)
+        if tmp is not None:
+            return tmp.__repr__()
+        tmp = self.str_to_complex(result)
+        if tmp is not None:
+            return tmp.__repr__()
+        return result
 
     def replace_funct(self, expr):
         math_funct = {
@@ -109,20 +141,21 @@ class Parser:
         return new_expr
 
     def put_pow(self, expr):
-        regex = r"[\w\^\.]+([*][\w\^\.])+"
+        regex = r"[\w\^\.]+([*][\w\^\.]+)+"
         matches = re.finditer(regex, expr)
         for match in matches:
             tokens = match.group().split('*')
             new_expr = ""
-            use = []
+            used = []
             for token in tokens:
-                if token not in use:
-                    i = match.group().count(token)
-                    use.append(token)
+                if token not in used:
+                    i = tokens.count(token)
+                    used.append(token)
                     if len(new_expr) != 0:
                         new_expr += '*'
                     if i > 1:
-                        new_expr += "{}^{}".format(token,i)
+                        print(tokens, token,i)
+                        new_expr += "{}^{}".format(token, i)
                     else:
                         new_expr += token
             expr = expr.replace(match.group(), new_expr)
