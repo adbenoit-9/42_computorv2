@@ -66,7 +66,9 @@ def main():
             if result is not None:
                 print(result)
         except ValueError as err:
-            print(err)
+            print('error: {}'.format(err))
+        except ZeroDivisionError as err:
+            print('error: {}'.format(err))
     return 0
 
 
