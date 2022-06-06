@@ -1,44 +1,21 @@
+from posixpath import split
 import re
 from utils import rm_useless_brackets
 
 
 def get_factored_expr(expr):
-    begin = expr.rfind('(')
-    stop = 1
-    if begin == -1:
-        return None, None
-    match = expr[begin:]
-    end = match.find(')')
-    if end == -1:
-        raise ValueError("syntax error")
-    end += begin + 1
-    if begin > 0 and expr[begin - 1] in '*/^':
-        x2 = expr[begin + 1:end - 1]
-        op = expr[begin - 1]
-        for i in range(begin - 2, 0, -1):
-            if expr[i] == ')':
-                stop = 0
-            if expr[i] == '(':
-                stop = 1
-            if expr[i] in "+-)(" and stop:
-                if expr[i] == '(':
-                    x1 = expr[i:begin - 1]
-                else:
-                    i += 1
-                    x1 = expr[i:begin - 1]
-                return expr[i:end], [x1, op, x2]
-        return expr[:end], [expr[:begin - 1], op, x2]
-    elif end < len(expr) and expr[end] in '*/^':
-        x1 = expr[begin + 1:end - 1]
-        op = expr[end]
-        for i in range(end + 1, len(expr)):
-            if expr[i] in "+-)(":
-                if expr[i] == '-' and i == end + 1:
-                    continue
-                x2 = expr[end + 1:i]
-                return expr[begin:i], [x1, op, x2]
-        return expr[begin:], [x1, op, expr[end + 1:]]
-    return expr[begin:end], [expr[begin + 1:end - 1], '*', '1']
+    regex = [r"(?P<x1>[\w\.]+)[\*]\((?P<x2>[\w\.\+\-\*\/]+)\)",
+            r"\((?P<x1>[\w\.\+\-\*\/]+)\)[\*](?P<x2>[\w\.]+)",
+            r"\((?P<x1>[\w\.\+\-\*\/]+)\)[\*](?P<x2>\([\w\.\+\-\*\/]+\))",
+            r"\((?P<x1>[\w\.\+\-\*\/]+)\)[/](?P<x2>[\w\.]+)"]
+    for i in range(4):
+        match = re.search(regex[i], expr)
+        if match is None:
+            continue
+        if i == 3:
+            return match.group(), [match.group('x1'), '/', match.group('x2')]
+        return match.group(), [match.group('x1'), '*', match.group('x2')]
+    return None, []
 
 
 def power_to_mul(expr, power):
@@ -65,7 +42,11 @@ def add_plus(expr):
 def op_to_str(x1, x2, op):
     if x2 == "1":
         return x1
+    if x1 == "0":
+        return "0"
     elif op == '*':
+        if x2 == "0":
+            return "0"
         if x1 == "1":
             return x2
     return x1 + op + x2
@@ -73,6 +54,11 @@ def op_to_str(x1, x2, op):
 def decompose(expr):
     expr = expr.replace(' ', '')
     expr = rm_useless_brackets(expr)
+    regex = r"\((?P<x>[\w\.\+\-\*\/]+)\)[\^](?P<pow>[\d\.]+)"
+    matches = re.finditer(regex, expr)
+    for match in matches:
+        new_expr = power_to_mul(match.group('x'), match.group('pow'))
+        expr  = expr.replace(match.group(), new_expr)
     match, tokens = get_factored_expr(expr)
     if match is None:
         return expr
@@ -83,10 +69,6 @@ def decompose(expr):
         if tokens[i] == '1':
             expr = expr.replace(match, tokens[1 - i])
             return decompose(expr)
-    if op == '^':
-        new_expr = power_to_mul(tokens[0], tokens[1])
-        expr = expr.replace(match, new_expr)
-        return decompose(expr)
     for i in range(len(tokens)):
         if '(' not in tokens[i]:
             tokens[i] = add_plus(tokens[i])
@@ -98,6 +80,6 @@ def decompose(expr):
             for k in range(len(tokens[i])):
                 if len(new_expr):
                     new_expr += '+'
-                new_expr += op_to_str(tokens[i - 1][j], tokens[i][k], op)
+                new_expr += op_to_str(tokens[i- 1][j], tokens[i][k], op)
     expr = expr.replace(match, '({})'.format(new_expr))
     return decompose(expr)

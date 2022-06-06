@@ -122,7 +122,6 @@ class Parser:
 
     def calculate_pow(self, expr):
         regex = r"(?P<x1>[+-]{,1}[\d\.]+|i)[\^](?P<x2>[-+]{,1}[\d\.]+)"
-        tmp = 0
         calc = re.search(regex, expr)
         new_expr = expr
         while calc is not None:
@@ -144,7 +143,10 @@ class Parser:
         regex = r"[\w\^\.]+([*][\w\^\.]+)+"
         matches = re.finditer(regex, expr)
         for match in matches:
-            tokens = match.group().split('*')
+            begin = 0
+            if match.span()[0] > 0 and expr[match.span()[0] - 1] in "/^%":
+                begin = match.group().find('*') + 1
+            tokens = match.group()[begin:].split('*')
             new_expr = ""
             used = []
             for token in tokens:
@@ -154,11 +156,10 @@ class Parser:
                     if len(new_expr) != 0:
                         new_expr += '*'
                     if i > 1:
-                        print(tokens, token,i)
                         new_expr += "{}^{}".format(token, i)
                     else:
                         new_expr += token
-            expr = expr.replace(match.group(), new_expr)
+            expr = expr.replace(match.group()[begin:], new_expr)
         return expr
                 
     def reduce(self, expr):
@@ -177,7 +178,6 @@ class Parser:
                     x2 = self.str_to_value(x2)
                 op = match.group('op')
                 result = do_operation(x1, x2, op)
-                print(result)
                 expr = expr.replace(operation, str(result))
                 if isinstance(result, str):
                     size = len(x1) if isinstance(x1, str) else len(x2)
