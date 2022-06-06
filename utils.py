@@ -13,6 +13,33 @@ def isnumber(n):
         return True
     return False
 
+
+def extract_function(expr, option=None):
+    if option is None:
+        regex = r"[a-z]+\("
+    else:
+        regex = option + r"\("
+    match = list(re.finditer(regex, expr))
+    if len(match) == 0:
+        return expr, None
+    match = match[-1]
+    begin = match.span()[0] + len(match.group())
+    end = begin
+    name = match.group()[:-1]
+    count = 1
+    while count:
+        if expr[end] == '(':
+            count += 1
+        if expr[end] == ')':
+            count -= 1
+        end += 1
+    param = expr[begin:end - 1]
+    if option is None and name in ['cos', 'sin', 'tan', 'exp', 'abs', 'sqrt']\
+            and re.search(r"[a-z]", param):
+        return expr, None
+    return name, param
+
+
 def rm_useless_brackets(expr):
     regex = r"\([^\(\)]*\)"
     matches = list(re.finditer(regex, expr))
@@ -23,12 +50,16 @@ def rm_useless_brackets(expr):
             span = elem.span()
             try:
                 float(elem.group()[1:-1])
-                expr = expr[:span[0]] + elem.group()[1:-1] + expr[span[1]:]
-                change = 1
-                break
+                if elem.group()[1:-1].isalpha() and \
+                        (span[0] == 0 or expr[span[0] - 1].isalpha() is False):
+                    expr = expr[:span[0]] + elem.group()[1:-1] + expr[span[1]:]
+                    change = 1
+                    break
             except:
-                if (span[0] == 0 or expr[span[0] - 1] in "(+-") and \
-                        (span[1] == len(expr) or expr[span[1]] in "+-)"):
+                if (elem.group()[1:-1].isalpha() and
+                        (span[0] == 0 or expr[span[0] - 1].isalpha() is False)) or \
+                        ((span[0] == 0 or expr[span[0] - 1] in "(+-") and \
+                        (span[1] == len(expr) or expr[span[1]] in "+-)")):
                     expr = expr[:span[0]] + elem.group()[1:-1] + expr[span[1]:]
                     change = 1
                     break
@@ -37,7 +68,7 @@ def rm_useless_brackets(expr):
 
 
 def put_space(expr):
-    matches = re.finditer(r"[^\w\^\.\(\)\[\],;]+", expr)
+    matches = re.finditer(r"[^\w\^\.\(\)\[\],;\|]+", expr)
     op = []
     for elem in matches:
         if elem.group() not in op:

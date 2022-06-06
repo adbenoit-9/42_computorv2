@@ -2,7 +2,6 @@ from parser import Parser
 from calculator import calculator
 from ft_matrix import Matrix
 from function import Function
-import string, re
 
 
 def isfunction(expr):

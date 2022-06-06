@@ -1,10 +1,13 @@
 from dataclasses import replace
 import math
+from multiprocessing.sharedctypes import Value
+
+from numpy import extract
 from ft_math import ft_abs, ft_sqrt
 from function import Function
 from ft_matrix import Matrix
 from ft_complex import Complex, isrealnumber
-from utils import rm_useless_brackets, put_space
+from utils import rm_useless_brackets, put_space, extract_function
 import re
 from calculator import calculator, do_operation
 
@@ -37,6 +40,8 @@ class Parser:
             raise ValueError('syntax error')
         for i in range(len(self.cmd)):
             self.cmd[i] = self.cmd[i].strip()
+            if self.cmd[i][-1] in "*/+-%^":
+                raise ValueError('syntax error')
             if '?' in self.cmd[i]:
                 if i == 0 or '?' in self.cmd[i][:-1]:
                     raise ValueError('syntax error')
@@ -45,7 +50,6 @@ class Parser:
         if isinstance(expr, str) is False:
             raise ValueError('Parser: invalid argument')
         expr = expr.replace(' ', '')
-        # expr = self.put_mul(expr)
         expr = self.replace_var(expr)
         expr = self.put_mul(expr)
         expr = self.replace_funct(expr)
@@ -60,16 +64,20 @@ class Parser:
         return expr
 
     def end(self, result):
-        if isinstance(result, str) is False:
-            if isinstance(result, Matrix):
-                return result.__repr__()
-            return result
+        result = str(result)
+        if result[-1] in "*/+-%^":
+            raise ValueError('syntax error')
         tmp = self.str_to_matrix(result)
         if tmp is not None:
             return tmp.__repr__()
         tmp = self.str_to_complex(result)
         if tmp is not None:
             return tmp.__repr__()
+        result = result.replace(' ', '')
+        name, param = extract_function(result, "abs")
+        while param is not None:
+            result = result.replace("abs({})".format(param), "|{}|".format(param))
+            name, param = extract_function(result, "abs")
         return put_space(result)
 
     def replace_funct(self, expr):
@@ -81,40 +89,44 @@ class Parser:
             'abs': ft_abs,
             'sqrt': ft_sqrt,
         }
-        matches = re.finditer(r"(?P<name>[\w_]+)[\(](?P<param>[^\(\)]*)[\)]", expr)
-        for match in matches:
-            funct = match.group()
-            name = match.group('name')
-            param = match.group('param')
-            if isinstance(self.str_to_value(name), str) is False and \
-                    isinstance(self.str_to_value(name), Function) is False:
-                expr = expr[:match.span()[0] + len(name)] + '*' + expr[match.span()[0] + len(name):]
-                continue
-            if len(param) == 0:
-                raise ValueError('function parameter not found.')
+        name, param = extract_function(expr)
+        if param is None:
+            return expr
+        funct = "{}({})".format(name, param)
+        i = expr.find(funct)
+        j = i + len(funct)
+        if len(param) == 0:
+            raise ValueError('function parameter not found.')
+        param = self.str_to_value(param)
+        if isinstance(param, str):
+            param = calculator(param, self)
             param = self.str_to_value(param)
-            if isinstance(param, str):
-                param = calculator(param, self)
-                param = self.str_to_value(param)
-            if name in math_funct.keys() and isrealnumber(param):
-                value = math_funct[name](param)
-                expr = expr.replace(funct, str(value))
-            elif name == "abs" and isinstance(param, Complex):
-                value = param.conjugate()
-                expr = expr.replace(funct, str(value))
-            elif name in self.data.keys():
+        if name in math_funct.keys() and isrealnumber(param):
+            value = math_funct[name](param)
+            expr = expr[:i] + str(value) + expr[j:]
+        elif name == "abs" and isinstance(param, Complex):
+            value = param.conjugate()
+            expr = expr.replace(funct, str(value))
+        elif name in self.data.keys():
+            if (i == 0 or expr[i - 1] not in "%*/)") and \
+                    (j == len(expr) or expr[j] not in "%*/)"):
+                value = "{}".format(self.data[name].image(param))
+            else:
                 value = "({})".format(self.data[name].image(param))
-                expr = expr.replace(funct, str(value))
-            elif name not in math_funct:
-                raise ValueError("function '{}' is undefined.".format(name))
-        return expr
+            expr = expr[:i] + str(value) + expr[j:]
+        elif name not in math_funct:
+            raise ValueError("function '{}' is undefined.".format(name))
+        return self.replace_funct(expr)
 
     def put_mul(self, expr):
         expr = expr.replace(')(', ')*(')
         regex = r"(?P<x1>[\d\[\];,\.]+)(?P<x2>[A-Za-z]+)"
         match = re.search(regex, expr)
         if match is None:
-            return expr
+            regex = r"(?P<x1>[A-Za-z]+)(?P<x2>[\d\[\];,\.]+)"
+            match = re.search(regex, expr)
+            if match is None:
+                return expr
         if match.group('x1')[-1] != '.':
             expr = expr.replace(match.group(), "{}*{}"
                                 .format(match.group('x1'), match.group('x2')))
