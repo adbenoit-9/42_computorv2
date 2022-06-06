@@ -50,8 +50,9 @@ stockage data: `dictionary`
     - [x] 16+4*1+4*1+1^2+3
     - [x] funB(y) = 43 * y / (4 % 2 * y)
     - [x] funC(z) = -2 * z - 5
-    - [x]  funA(2) + funB(4) = ? (funA(x) = 2 * 4 + x, funB(x) = 4 -5 + (x + 2)^2 - 4)
-    - [x]  funA(2) + funB(4) = ? (funA(x) = 2 * 4 + x, funB(y) = 43 * y / (4 % 2 * y)
+    - [x] funA(2) + funB(4) = ? (funA(x) = 2 * 4 + x, funB(x) = 4 -5 + (x + 2)^2 - 4)
+    - [x] funA(2) + funB(4) = ? (funA(x) = 2 * 4 + x, funB(y) = 43 * y / (4 % 2 * y)
+    - [ ] 4 / (2+i) = ? 
 ---
 # example
 ```
@@ -72,8 +73,8 @@ data = {
 
 # bonus
 - facile:
-    - [ ] Afficher la liste des variables stockées ainsi que leurs valeurs
-    - [ ] Historique des commandes avec résultats (pas fun)
+    - [x] Afficher la liste des variables stockées ainsi que leurs valeurs
+    - [x] Historique des commandes avec résultats
     - [x] Ajout de fonctions usuelles (exponentielle, racine carrée, valeur absolue, cosinus, sinus, tangente, etc.)
     - [x] Composition de fonction
     - [x] matrix transpose

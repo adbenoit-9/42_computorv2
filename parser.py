@@ -1,14 +1,9 @@
-from dataclasses import replace
-import math
-from multiprocessing.sharedctypes import Value
-
-from numpy import extract
 from ft_math import ft_abs, ft_sqrt
 from function import Function
 from ft_matrix import Matrix
 from ft_complex import Complex, isrealnumber
 from utils import rm_useless_brackets, put_space, extract_function
-import re
+import re, math
 from calculator import calculator, do_operation
 
 
@@ -22,6 +17,11 @@ class Parser:
         if data is None:
             data = {}
         self.data = data
+        tokens = cmd.lower().split()
+        if len(tokens) == 2 and tokens[0] == "show" and tokens[1] == "data":
+            self.cmd = [tokens[0] + ' ' + tokens[1]]
+            return
+        cmd = cmd.replace(' ', '')
         regex = r"\|.+\|"
         match = re.search(regex, cmd)
         while match is not None:
@@ -52,7 +52,6 @@ class Parser:
         expr = expr.replace(' ', '')
         expr = self.replace_var(expr)
         expr = self.put_mul(expr)
-        expr = self.replace_funct(expr)
         expr = self.replace_funct(expr)
         expr = self.put_pow(expr)
         expr = self.calculate_pow(expr)
