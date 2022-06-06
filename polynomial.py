@@ -1,18 +1,5 @@
 from parse_polynomial import parse_polynomial
-import math
-
-
-def pgcd(x, y):
-    x = float(x)
-    y = float(y)
-    if x.is_integer() and y.is_integer():
-        n = min(abs(int(x)), abs(int(y)))
-        for i in range(n, 1, -1):
-            if x % i == 0 and y % i == 0:
-                if x < 0 and y < 0:
-                    return True, -i
-                return True, i
-    return False, 1
+from ft_math import pgcd, ft_sqrt, ft_abs
 
 
 class Polynomial:
@@ -60,7 +47,7 @@ class Polynomial:
                 'b': -self.coefs[1],
                 'sign': '-' if i == 0 else '+',
                 'delta': delta,
-                'sqrt_delta': math.sqrt(delta),
+                'sqrt_delta': ft_sqrt(delta),
                 'a': self.coefs[2],
                 'unknown': self.unknown
             }
@@ -91,7 +78,7 @@ class Polynomial:
                 'b': -self.coefs[1],
                 'sign': '-' if i == 0 else '+',
                 'delta': -delta,
-                'sqrt_delta': math.sqrt(-delta),
+                'sqrt_delta': ft_sqrt(-delta),
                 'a': self.coefs[2],
                 'denom': 2 * self.coefs[2],
                 'unknown': self.unknown
@@ -167,6 +154,6 @@ class Polynomial:
             op = '-' if self.coefs[i] < 0 else '+'
             if i != 0 or op == '-':
                 polynomial += "{} ".format(op)
-            polynomial += "{} * X^{} ".format(abs(self.coefs[i]), i)
+            polynomial += "{} * X^{} ".format(ft_abs(self.coefs[i]), i)
         polynomial += "= 0"
         return polynomial

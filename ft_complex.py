@@ -1,4 +1,4 @@
-import math
+from ft_math import ft_sqrt, ft_abs
 
 
 def isrealnumber(n):
@@ -15,7 +15,10 @@ class Complex:
         self.im = im
 
     def module(self):
-        return math.sqrt(self.real ** 2 + self.im ** 2)
+        return ft_sqrt(self.real ** 2 + self.im ** 2)
+
+    def conjugate(self):
+        return Complex(self.real, -self.im)
 
     def copy(self):
         return Complex(self.real, self.im)
@@ -82,7 +85,11 @@ class Complex:
         return (Complex(real=self.real + other.real, im=self.im + other.im))
 
     def __rsub__(self, other):
-        return self.__sub__(other)
+        if isrealnumber(other):
+            return (Complex(real=other - self.real, im=-self.im))
+        if isinstance(other, Complex) is False:
+            raise TypeError('only Complex')
+        return (Complex(real=other.real - self.real, im=other.im - self.im))
 
     def __sub__(self, other):
         if isrealnumber(other):
@@ -133,8 +140,10 @@ class Complex:
         return Complex(real=real, im=im)
 
     def __pow__(self, n):
-        if isrealnumber(n) is False:
-            raise ValueError('Invalid type')
+        if isinstance(n, int) is False:
+            raise ValueError("invalid power type '{}'".format(type(n).__name__))
+        if n < 0:
+            raise ValueError("negative power not supported")
         res = self.copy()
         for i in range(n - 1):
             res *= self
@@ -163,10 +172,10 @@ class Complex:
             s += str(self.real)
         if self.im > 0 and self.real:
             s += '+'                                            
-        if self.im < 0 and self.real:
+        if self.im < 0:
             s += '-'
-        if abs(self.im) != 1 and self.im:
-            s += str(abs(self.im)) + '*'
+        if self.im:
+            s += str(ft_abs(self.im)) + '*'
         if self.im:
             s += 'i'
         if self.real == 0 and self.im == 0:
@@ -183,10 +192,10 @@ class Complex:
             s += str(self.real)
         if self.im > 0 and self.real:
             s += ' + '
-        if self.im < 0 and self.real:
+        if self.im < 0:
             s += ' - '
-        if abs(self.im) != 1 and self.im:
-            s += str(abs(self.im))
+        if ft_abs(self.im) != 1 and self.im:
+            s += str(ft_abs(self.im))
         if self.im:
             s += 'i'
         if self.real == 0 and self.im == 0:

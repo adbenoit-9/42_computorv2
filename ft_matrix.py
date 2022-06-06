@@ -143,6 +143,10 @@ class Matrix:
             return False
 
     def __pow__(self, n):
+        if isinstance(n, int) is False:
+            raise ValueError("invalid power type '{}'".format(type(n).__name__))
+        if n < 0:
+            raise ValueError("negative power not supported")
         if self.is_square() is False:
             raise ValueError("power supported only on square matrix")
         if n == 0:
@@ -171,7 +175,7 @@ class Matrix:
     def T(self):
         if self.shape == (0, 0):
             return []
-        res = [[] for _ in range(self.shape[0])]
+        res = [[] for _ in range(self.shape[1])]
         for i, row in enumerate(self.values):
             for j, val in enumerate(row):
                 res[j].append(val)

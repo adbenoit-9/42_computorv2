@@ -1,5 +1,6 @@
 from dataclasses import replace
 import math
+from ft_math import ft_abs, ft_sqrt
 from function import Function
 from ft_matrix import Matrix
 from ft_complex import Complex, isrealnumber
@@ -18,6 +19,11 @@ class Parser:
         if data is None:
             data = {}
         self.data = data
+        regex = r"\|.+\|"
+        match = re.search(regex, cmd)
+        while match is not None:
+            cmd = cmd.replace(match.group(), "abs({})".format(match.group()[1:-1]))
+            match = re.search(regex, cmd)
         regex = r"[^\w\_\+\-\*\/\(\)\[\];,\.\%\^=\?]"
         match = re.search(regex, cmd)
         if match is not None:
@@ -27,7 +33,7 @@ class Parser:
         if i != 0 or j != 0:
             raise ValueError('syntax error')
         self.cmd = cmd.lower().split('=')
-        if len(self.cmd) != 2:
+        if len(self.cmd) != 2 or len(self.cmd[1]) == 0:
             raise ValueError('syntax error')
         for i in range(len(self.cmd)):
             self.cmd[i] = self.cmd[i].strip()
@@ -39,8 +45,9 @@ class Parser:
         if isinstance(expr, str) is False:
             raise ValueError('Parser: invalid argument')
         expr = expr.replace(' ', '')
-        expr = self.put_mul(expr)
+        # expr = self.put_mul(expr)
         expr = self.replace_var(expr)
+        expr = self.put_mul(expr)
         expr = self.replace_funct(expr)
         expr = self.replace_funct(expr)
         expr = self.put_pow(expr)
@@ -71,8 +78,8 @@ class Parser:
             'sin': math.sin,
             'tan': math.tan,
             'exp': math.exp,
-            'abs': abs,
-            'sqrt': math.sqrt,
+            'abs': ft_abs,
+            'sqrt': ft_sqrt,
         }
         matches = re.finditer(r"(?P<name>[\w_]+)[\(](?P<param>[^\(\)]*)[\)]", expr)
         for match in matches:
@@ -88,8 +95,12 @@ class Parser:
             param = self.str_to_value(param)
             if isinstance(param, str):
                 param = calculator(param, self)
+                param = self.str_to_value(param)
             if name in math_funct.keys() and isrealnumber(param):
                 value = math_funct[name](param)
+                expr = expr.replace(funct, str(value))
+            elif name == "abs" and isinstance(param, Complex):
+                value = param.conjugate()
                 expr = expr.replace(funct, str(value))
             elif name in self.data.keys():
                 value = "({})".format(self.data[name].image(param))
@@ -100,12 +111,20 @@ class Parser:
 
     def put_mul(self, expr):
         expr = expr.replace(')(', ')*(')
-        regex = r"(?P<x1>[\d\[\]\;\,\.]+)(?P<x2>[A-Za-z]+)"
+        regex = r"(?P<x1>[\d\[\];,\.]+)(?P<x2>[A-Za-z]+)"
         match = re.search(regex, expr)
         if match is None:
             return expr
-        expr = expr.replace(match.group(), "{}*{}"
-                            .format(match.group('x1'), match.group('x2')))
+        if match.group('x1')[-1] != '.':
+            expr = expr.replace(match.group(), "{}*{}"
+                                .format(match.group('x1'), match.group('x2')))
+        elif match.group('x2') == 't':
+            mat = self.str_to_matrix(match.group('x1')[:-1])
+            if mat is None:
+                raise ValueError("tranpose supported only by matrix")
+            expr = expr.replace(match.group(), str(mat.T()))
+        else:
+            raise ValueError("syntax error")
         return self.put_mul(expr)
 
     def replace_var(self, expr):
@@ -121,13 +140,13 @@ class Parser:
         return new_expr
 
     def calculate_pow(self, expr):
-        regex = r"(?P<x1>[+-]{,1}[\d\.]+|i)[\^](?P<x2>[-+]{,1}[\d\.]+)"
-        calc = re.search(regex, expr)
+        regex = r"(?P<x1>[+-]{,1}[\d\.\[\];,]+|i)[\^](?P<x2>[-+]{,1}[\d\.]+)"
+        operation = re.search(regex, expr)
         new_expr = expr
-        while calc is not None:
-            x1 = self.str_to_value(calc.group('x1'))
-            x2 = self.str_to_value(calc.group('x2'))
-            start, end = calc.span()
+        while operation is not None:
+            x1 = self.str_to_value(operation.group('x1'))
+            x2 = self.str_to_value(operation.group('x2'))
+            start, end = operation.span()
             if start != 0 and new_expr[start - 1] == '^':
                 x = do_operation(x1, x2, '*')
             else:
@@ -136,7 +155,7 @@ class Parser:
                 new_expr = '{}+{}{}'.format(new_expr[:start], x, new_expr[end:])
             else:
                 new_expr = '{}{}{}'.format(new_expr[:start], x, new_expr[end:])
-            calc = re.search(regex, new_expr)
+            operation = re.search(regex, new_expr)
         return new_expr
 
     def put_pow(self, expr):
@@ -207,6 +226,7 @@ class Parser:
         return Matrix(lst)
 
     def str_to_complex(self, comp):
+        comp = comp.replace('-i', '-1*i')
         if isinstance(comp, str) is False:
             raise ValueError("str_to_complex: type '{}' not supported"
                              .format(type(comp).__name__))

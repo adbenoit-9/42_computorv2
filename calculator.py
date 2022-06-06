@@ -2,6 +2,7 @@ import re
 from ft_matrix import Matrix
 from decompose import decompose
 from utils import isrealnumber
+from ft_math import ft_abs
 
 
 def do_operation(x1, x2, op):
@@ -24,7 +25,7 @@ def do_operation(x1, x2, op):
     elif op == '/':
         result = x1 / x2
     elif op == '%':
-        result = abs(x1) % abs(x2)
+        result = ft_abs(x1) % ft_abs(x2)
         result =  -result if x1 < 0 else result
     elif op == '^':
         result = x1 ** x2
@@ -80,8 +81,6 @@ def calculator(expr, parser):
             result = do_operation(result, value, op)
         else:
             result = value
-    if op is None:
-        return expr
     expr = ""
     for val in tmp:
         expr += val

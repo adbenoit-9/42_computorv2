@@ -51,6 +51,7 @@ stockage data: `dictionary`
     - [x] funB(y) = 43 * y / (4 % 2 * y)
     - [x] funC(z) = -2 * z - 5
     - [x]  funA(2) + funB(4) = ? (funA(x) = 2 * 4 + x, funB(x) = 4 -5 + (x + 2)^2 - 4)
+    - [x]  funA(2) + funB(4) = ? (funA(x) = 2 * 4 + x, funB(y) = 43 * y / (4 % 2 * y)
 ---
 # example
 ```
@@ -75,6 +76,7 @@ data = {
     - [ ] Historique des commandes avec résultats (pas fun)
     - [x] Ajout de fonctions usuelles (exponentielle, racine carrée, valeur absolue, cosinus, sinus, tangente, etc.)
     - [x] Composition de fonction
+    - [x] matrix transpose
 
 - parsing flemme:
     - [ ] Calcul de norme
