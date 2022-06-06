@@ -19,11 +19,11 @@ def cli(data, cmd):
     parser = Parser(data, cmd)
     cmd = parser.cmd
     name, param = isfunction(cmd[0])
-    typ = 'variable' if param is None else 'function'
+    type_ = 'variable' if param is None else 'function'
     if cmd[1] == '?':
         result = calculator(cmd[0], parser)
     elif cmd[1].endswith('?'):
-        if typ != 'function':
+        if type_ != 'function':
             raise ValueError('syntax error')
         if name not in data.keys():
             raise ValueError("function '{}' not defined".format(name))
@@ -31,13 +31,13 @@ def cli(data, cmd):
         return None
     else:
         if name.isalpha() is False:
-            raise ValueError('illegal {} name: {}'.format(t, name))
+            raise ValueError('illegal {} name: {}'.format(type_, name))
         if name in ['i', 'cos', 'sin', 'tan', 'abs', 'sqrt']:
-            raise ValueError('illegal {} name: {}'.format(t, name))
-        if typ == 'variable':
+            raise ValueError('illegal {} name: {}'.format(type_, name))
+        if type_ == 'variable':
             data[name] = calculator(cmd[1], parser)
         else:
-            expr = parser.start(cmd[1])
+            expr = calculator(cmd[1], parser)
             data[name] = Function(parser, expr, param)
         result = data[name]
     return parser.end(result)

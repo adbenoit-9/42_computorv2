@@ -3,7 +3,7 @@ import math
 from function import Function
 from ft_matrix import Matrix
 from ft_complex import Complex, isrealnumber
-from utils import rm_useless_brackets
+from utils import rm_useless_brackets, put_space
 import re
 from calculator import calculator, do_operation
 
@@ -63,7 +63,7 @@ class Parser:
         tmp = self.str_to_complex(result)
         if tmp is not None:
             return tmp.__repr__()
-        return result
+        return put_space(result)
 
     def replace_funct(self, expr):
         math_funct = {
@@ -132,7 +132,7 @@ class Parser:
                 x = do_operation(x1, x2, '*')
             else:
                 x = do_operation(x1, x2, '^')
-            if x > 0 and (start == 0 or new_expr[start - 1] not in '*/%^'):
+            if (isrealnumber(x) is False or x > 0) and (start == 0 or new_expr[start - 1] not in '*/%^'):
                 new_expr = '{}+{}{}'.format(new_expr[:start], x, new_expr[end:])
             else:
                 new_expr = '{}{}{}'.format(new_expr[:start], x, new_expr[end:])
@@ -190,15 +190,6 @@ class Parser:
                 expr = rm_useless_brackets(expr)
         return expr.replace('+-', '-')
 
-    def put_space(self, expr):
-        matches = re.finditer(r"[^\w\^\.\(\)\[\],;]+", expr)
-        op = []
-        for elem in matches:
-            if elem.group() not in op:
-                expr = expr.replace(elem.group(), " {} ".format(elem.group()))
-            op.append(elem.group())
-        return expr.strip()
-
     def str_to_matrix(self, mat):
         if isinstance(mat, str) is False:
             raise ValueError("str_to_matrix: type '{}' not supported"
@@ -252,7 +243,4 @@ class Parser:
                 return int(x)
             return x
         except Exception:
-            # regex = r"[^\!\$\&\@\#\{\}\'\"\`\~\=\?]*"
-            # if re.fullmatch(regex, x) is not None:
-            #     raise ValueError("invalid variable name '{}'".format(x1))
             return x

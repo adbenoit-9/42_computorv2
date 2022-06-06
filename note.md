@@ -48,8 +48,9 @@ stockage data: `dictionary`
     - [x] (4+x)^2 + 3
     - [x] f(x)=tan(x)
     - [x] 16+4*1+4*1+1^2+3
-    - [ ] funB(y) = 43 * y / (4 % 2 * y)
-
+    - [x] funB(y) = 43 * y / (4 % 2 * y)
+    - [x] funC(z) = -2 * z - 5
+    - [x]  funA(2) + funB(4) = ? (funA(x) = 2 * 4 + x, funB(x) = 4 -5 + (x + 2)^2 - 4)
 ---
 # example
 ```

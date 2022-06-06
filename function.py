@@ -2,6 +2,7 @@ from calculator import calculator
 from ft_complex import Complex
 from polynomial import Polynomial
 from decompose import decompose
+from utils import put_space
 import re
 
 
@@ -9,9 +10,9 @@ class Function:
     def __init__(self, parser, expr, x='x'):
         if isinstance(expr, str) is False or isinstance(x, str) is False:
             raise ValueError('Function: type error')
-        if x.isalpha() is False:
+        if x.isalpha() is False or x in ['cos', 'sin', 'tan', 'abs', 'sqrt','i']:
             raise ValueError("parameter '{}' is invalid".format(x))
-        regex = r"[^\d\+\-\*\%\/\^;,\.\[\]\(\)i" + x + "]+"
+        regex = r"[^\d\+\-\*\%\/\^;,\.\[\]\(\)i " + x + "]+"
         match = re.search(regex, expr)
         if match is not None and \
                 match.group() not in ['cos', 'sin', 'tan', 'abs', 'sqrt']:
@@ -43,10 +44,10 @@ class Function:
         y = decompose(y)
         y = parser.start(y)
         expr = self.decomposed
-        print('{} = {}'.format(expr, y))
+        print('{} = {}'.format(put_space(expr), y))
         expr = expr.replace(x, 'X')
         eq = Polynomial('{} = {}'.format(expr, y), x)
         eq.resolve()
 
     def __str__(self):
-        return self.expr
+        return put_space(self.expr)

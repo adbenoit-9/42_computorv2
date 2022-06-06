@@ -1,6 +1,7 @@
 import re
 from ft_matrix import Matrix
 from decompose import decompose
+from utils import isrealnumber
 
 
 def do_operation(x1, x2, op):
@@ -56,9 +57,10 @@ def split_operation(expr):
 
 def calculator(expr, parser):
     expr = parser.start(expr)
-    expr = decompose(expr)
-    expr = parser.start(expr)
-    expr = parser.start(expr) # pk il faut mettre une deuxieme fois ? (3 + 8i) * 2
+    if re.search(r"[^\di\+\-\*\/\%\^\[\]\.;,\(\)]+", expr) is None:
+        expr = decompose(expr)
+        expr = parser.start(expr)
+        expr = parser.start(expr) # pk il faut mettre une deuxieme fois ? (3 + 8i) * 2
     tokens = split_operation(expr)
     result = 0
     value = 0
@@ -80,11 +82,14 @@ def calculator(expr, parser):
             result = value
     if op is None:
         return expr
-    result = str(result) if result != 0 else ""
+    expr = ""
     for val in tmp:
-        result += val
-    if len(result) == 0:
-        result = "0"
-    if result[0] == '+':
-        result = result[1:]
-    return parser.put_space(result)
+        expr += val
+    if len(expr) == 0 or isrealnumber(result) is False or result != 0:
+        result = str(result)
+        if result[0] != '-':
+            expr += '+'
+        expr += result
+    if expr[0] == "+":
+        return expr[1:]
+    return expr
