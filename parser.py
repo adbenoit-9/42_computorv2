@@ -190,9 +190,10 @@ class Parser:
         return expr
                 
     def reduce(self, expr):
-        regex = [r"(?P<x1>[-]{,1}[\w\^\.\[\],;]+)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)(?P<x2>[-]{,1}[\w\^\.\[\],;]+)",
-                r"\((?P<x1>[\di\+\-\*]+)\)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)\((?P<x2>[\di\+\-\*]+)\)",
-                r"(?P<x1>[-]{,1}([\d\.\*]+i?|i))(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)\((?P<x2>[\di\+\-\*]+)\)"]
+        regex = [r"\((?P<x1>[\di\+\-\*]+)\)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)\((?P<x2>[\di\+\-\*]+)\)",
+                r"\((?P<x1>[\di\+\-\*]+)\)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)(?P<x2>[-]{,1}([\d\.\*]+i?|i))",
+                r"(?P<x1>[-]{,1}([\d\.\*]+i?|i))(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)\((?P<x2>[\di\+\-\*]+)\)",
+                r"(?P<x1>[-]{,1}[\w\^\.\[\],;]+)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)(?P<x2>[-]{,1}[\w\^\.\[\],;]+)"]
         print(expr)
         for i in range(3):
             matches = list(re.finditer(regex[i], expr))
@@ -200,12 +201,10 @@ class Parser:
             for match in matches:
                 print(match.group(), i)
                 if re.fullmatch(r"[-]{,1}[\d\.]+\*i", match.group()) is None:
-                    print('match', match.group())
                     test = 0
             if len(matches) and test == 0:
                 break
             if len(matches) == 0 and i == 2:
-                print(match.group(), i)
                 return expr
         for match in matches:
                 operation = match.group()
