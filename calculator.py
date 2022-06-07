@@ -61,7 +61,7 @@ def calculator(expr, parser):
     if re.search(r"[^\di\+\-\*\/\%\^\[\]\.;,\(\)]+", expr) is None:
         expr = decompose(expr)
         expr = parser.start(expr)
-        expr = parser.start(expr) # pk il faut mettre une deuxieme fois ? (3 + 8i) * 2
+        # expr = parser.start(expr) # pk il faut mettre une deuxieme fois ? (3 + 8i) * 2
     tokens = split_operation(expr)
     result = 0
     value = 0

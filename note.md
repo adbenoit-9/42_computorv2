@@ -52,7 +52,7 @@ stockage data: `dictionary`
     - [x] funC(z) = -2 * z - 5
     - [x] funA(2) + funB(4) = ? (funA(x) = 2 * 4 + x, funB(x) = 4 -5 + (x + 2)^2 - 4)
     - [x] funA(2) + funB(4) = ? (funA(x) = 2 * 4 + x, funB(y) = 43 * y / (4 % 2 * y)
-    - [ ] 4 / (2+i) = ? 
+    - [x] 4 / (2+i) = ? 
 ---
 # example
 ```

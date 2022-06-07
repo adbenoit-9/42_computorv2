@@ -88,8 +88,8 @@ def main():
             print(err)
         except ZeroDivisionError as err:
             print(err)
-        except Exception:
-            print('command failed')
+        # except Exception:
+        #     print('command failed')
     return 0
 
 

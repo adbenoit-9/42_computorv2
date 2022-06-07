@@ -56,10 +56,11 @@ class Parser:
         expr = self.put_pow(expr)
         expr = self.calculate_pow(expr)
         expr = rm_useless_brackets(expr)
+        # regex = r"[\d\^\.\[\],;]+[^\w\^\.\(\)\[\],;\-\+]+[-\d\^\.\[\],;]+"
+        # while re.search(regex, expr) is not None:
+        #     expr = self.reduce(expr)
+        # expr = self.reduce(expr)
         expr = self.reduce(expr)
-        regex = r"[\d\^\.\[\],;]+[^\w\^\.\(\)\[\],;\-\+]+[-]{,1}[\d\^\.\[\],;]+"
-        while re.search(regex, expr) is not None:
-            expr = self.reduce(expr)
         return expr
 
     def end(self, result):
@@ -193,19 +194,30 @@ class Parser:
         return expr
                 
     def reduce(self, expr):
-        regex = r"(?P<x1>[-]{,1}[\w\^\.\[\],;]+)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)(?P<x2>[-]{,1}[\w\^\.\[\],;]+)"
-        matches = list(re.finditer(regex, expr))
-        if len(matches) == 0:
-            return expr
+        regex = [
+                r"(?P<x1>[-]{,1}[\w\^\.\[\],;]+)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)(?P<x2>[-]{,1}[\w\^\.\[\],;]+)",
+                r"\((?P<x1>[\di\+\-\*]+)\)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)\((?P<x2>[\di\+\-\*]+)\)",
+                r"(?P<x1>[-]{,1}[\d\.\*]+[[\-i]|i]?)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)\((?P<x2>[\di\+\-\*]+)\)"
+                ]
+        for i in range(3):
+            matches = list(re.finditer(regex[i], expr))
+            test = 1
+            for match in matches:
+                if re.fullmatch(r"[-]{,1}[\d\.]\*i", match.group()) is None:
+                    print(match.group())
+                    test = 0
+            if len(matches) and test == 0:
+                print(matches)
+                break
+            if len(matches) == 0 and i == 2:
+                return expr
         for match in matches:
                 operation = match.group()
                 result = operation
                 x1 = match.group('x1')
                 x2 = match.group('x2')
-                if x1 != "i":
-                    x1 = self.str_to_value(x1)
-                if x2 != "i":
-                    x2 = self.str_to_value(x2)
+                x1 = self.str_to_value(x1)
+                x2 = self.str_to_value(x2)
                 op = match.group('op')
                 result = do_operation(x1, x2, op)
                 expr = expr.replace(operation, str(result))
@@ -216,9 +228,9 @@ class Parser:
                         size = len(x1) if isinstance(x1, str) else len(x2)
                         rest = expr[match.span()[1] - size:]
                         return expr.replace(rest, self.reduce(rest))
-                    return expr
+                    # return self.reduce(expr)
                 expr = rm_useless_brackets(expr)
-        return expr.replace('+-', '-')
+        return self.reduce(expr.replace('+-', '-'))
 
     def str_to_matrix(self, mat):
         if isinstance(mat, str) is False:
