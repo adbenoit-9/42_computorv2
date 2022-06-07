@@ -2,7 +2,7 @@ from ft_math import ft_abs, ft_sqrt
 from function import Function
 from ft_matrix import Matrix
 from ft_complex import Complex, isrealnumber
-from utils import rm_useless_brackets, put_space, extract_function
+from utils import isnumber, rm_useless_brackets, put_space, extract_function
 import re, math
 from calculator import calculator, do_operation
 
@@ -148,7 +148,7 @@ class Parser:
         return new_expr
 
     def calculate_pow(self, expr):
-        regex = r"(?P<x1>[+-]{,1}[\d\.\[\];,]+|i)[\^](?P<x2>[-+]{,1}[\d\.]+)"
+        regex = r"(?P<x1>[+-]?[\d\.\[\];,]+|i)[\^](?P<x2>[-+]?[\d\.]+)"
         operation = re.search(regex, expr)
         new_expr = expr
         while operation is not None:
@@ -189,43 +189,63 @@ class Parser:
             expr = expr.replace(match.group()[begin:], new_expr)
         return expr
                 
-    def reduce(self, expr):
-        regex = [r"\((?P<x1>[\di\+\-\*]+)\)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)\((?P<x2>[\di\+\-\*]+)\)",
-                r"\((?P<x1>[\di\+\-\*]+)\)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)(?P<x2>[-]{,1}([\d\.\*]+i?|i))",
-                r"(?P<x1>[-]{,1}([\d\.\*]+i?|i))(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)\((?P<x2>[\di\+\-\*]+)\)",
-                r"(?P<x1>[-]{,1}[\w\^\.\[\],;]+)(?P<op>[^\w\^\.\(\)\[\],;\-\+]+)(?P<x2>[-]{,1}[\w\^\.\[\],;]+)"]
-        print(expr)
+    def do_division(self, expr):
+        regex = [r"(?P<x1>[\d\.]+|i)\/(?P<x2>[-]?[\d\.]+|i)",
+                r"(?P<x1>[\d\.]+|i)\/\((?P<x2>[\w\.\+\-\*\%]+)\)",
+                r"\((?P<x1>[\w\.\+\-\*\%]+)\)\/\((?P<x2>[\w\.\+\-\*\%]+)\)"]
         for i in range(3):
-            matches = list(re.finditer(regex[i], expr))
-            test = 1
-            for match in matches:
-                print(match.group(), i)
-                if re.fullmatch(r"[-]{,1}[\d\.]+\*i", match.group()) is None:
-                    test = 0
-            if len(matches) and test == 0:
+            match = re.search(regex[i], expr)
+            if match is not None:
                 break
-            if len(matches) == 0 and i == 2:
-                return expr
-        for match in matches:
-                operation = match.group()
-                result = operation
-                x1 = match.group('x1')
-                x2 = match.group('x2')
-                x1 = self.str_to_value(x1)
-                x2 = self.str_to_value(x2)
-                op = match.group('op')
-                result = do_operation(x1, x2, op)
-                expr = expr.replace(operation, str(result))
-                if isinstance(result, str):
-                    size = len(x1) if isinstance(x1, str) else len(x2)
-                    rest = expr[match.span()[1]:]
-                    if len(rest):
-                        size = len(x1) if isinstance(x1, str) else len(x2)
-                        rest = expr[match.span()[1] - size:]
-                        return expr.replace(rest, self.reduce(rest))
-                    # return self.reduce(expr)
-                expr = rm_useless_brackets(expr)
-        return self.reduce(expr.replace('+-', '-'))
+        if match is None:
+            return expr
+        x1 = rm_useless_brackets(match.group('x1'))
+        x2 = rm_useless_brackets(match.group('x2'))
+        x1 = self.str_to_value(x1)
+        x2 = self.str_to_value(x2)
+        if isnumber(x1) is False:
+            x1 = self.str_to_value(match.group('x1'))
+        if isnumber(x2) is False:
+            x2 = self.str_to_value(match.group('x2'))
+        result = do_operation(x1, x2, '/')
+        if isinstance(result, str):
+            tmp = self.do_division(expr[match.span()[1]:])
+            return expr[:match.span()[1]] + tmp
+        return expr[:match.span()[0]] + str(result) + expr[match.span()[1]:]
+
+    def do_multiplication(self, expr):
+        regex = [r"(?P<x1>[\d\.]+|i)(?P<op>[\*%])(?P<x2>[-]?[\d\.]+|i)",
+                r"(?P<x1>[\d\.]+|i)(?P<op>[\*%])(?P<x2>\([\w\.\+\-\*\%]+\))",
+                r"\((?P<x1>[\w\.\+\-\*\%]+)\)(?P<op>[\*%])(?P<x2>\([\w\.\+\-\*\%]+\))"]
+        for i in range(3):
+            match = re.search(regex[i], expr)
+            if match is not None:
+                break
+        if match is None:
+            return expr
+        x1 = rm_useless_brackets(match.group('x1'))
+        x2 = rm_useless_brackets(match.group('x2'))
+        op = match.group('op')
+        x1 = self.str_to_value(x1)
+        x2 = self.str_to_value(x2)
+        if isnumber(x1) is False:
+            x1 = self.str_to_value(match.group('x1'))
+        if isnumber(x2) is False:
+            x2 = self.str_to_value(match.group('x2'))
+        result = do_operation(x1, x2, op)
+        expr = expr[:match.span()[0]] + str(result) + expr[match.span()[1]:]
+        if isinstance(result, str) and op == '*':
+            i = result.find(op) + 1 + match.span()[0]
+            tmp = self.do_division(expr[i:])
+            return expr[:i] + tmp
+        return expr
+
+    def reduce(self, expr):
+        new_expr = self.do_division(expr)
+        new_expr = self.do_multiplication(new_expr)
+        if new_expr == expr:
+            return new_expr
+        return self.reduce(new_expr)
 
     def str_to_matrix(self, mat):
         if isinstance(mat, str) is False:
@@ -248,19 +268,26 @@ class Parser:
         if isinstance(comp, str) is False:
             raise ValueError("str_to_complex: type '{}' not supported"
                              .format(type(comp).__name__))
-        re_im = r"([\d\.+-]+)?([\d\.\+\-]+[\*])?i{1}"
+        re_im = r"([-+]?[\d\.]+[+-])?([\d\.]+[\*]?)?i"
         match = re.fullmatch(re_im, comp)
         if match is None:
-            return None
+            re_im = r"([+-]?[\d\.]+[\*]?)?i[+-][\d\.]+"
+            match = re.fullmatch(re_im, comp)
+            if match is None:
+                return None
         re_nb = r"[+-]?[\d\.]+"
         matches = list(re.finditer(re_nb, comp))
         n = len(matches)
         if n == 0:
             return Complex(im=1)
         elif n == 1:
+            if matches[0].span()[1] == len(comp):
+                return Complex(1, float(matches[0].group()))
             if comp[matches[0].span()[1]] == '*' or comp[matches[0].span()[1]] == 'i':
                 return Complex(im=float(matches[0].group()))
             return Complex(real=float(matches[0].group()), im=1)
+        elif comp[matches[0].span()[1]] == '*' or comp[matches[0].span()[1]] == 'i':
+                return Complex(im=float(matches[0].group()), real=float(matches[1].group()))
         return Complex(real=float(matches[0].group()), im=float(matches[1].group()))
 
     def str_to_value(self, x):

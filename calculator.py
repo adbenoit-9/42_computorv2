@@ -6,7 +6,6 @@ from ft_math import ft_abs
 
 
 def do_operation(x1, x2, op):
-    print(x1, op, x2, type(x1))
     if isinstance(x1, str):
         if isinstance(x2, int) and x2 == 0 and op in '*/':
             return 0

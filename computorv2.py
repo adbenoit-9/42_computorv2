@@ -23,7 +23,7 @@ def data_to_str(data):
         if isinstance(data[key], Function) is False:
             if i != 0:
                 ret += '\n'
-            ret += "{} = {}".format(key, data[key])
+            ret += "{}: {}".format(key, data[key])
     if len(ret) == 0:
         return None
     return ret
