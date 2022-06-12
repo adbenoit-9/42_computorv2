@@ -56,12 +56,7 @@ def split_operation(expr):
     return tokens
 
 
-def calculator(expr, parser):
-    expr = parser.start(expr)
-    if re.search(r"[^\di\+\-\*\/\%\^\[\]\.;,\(\)]+", expr) is None:
-        expr = decompose(expr)
-        expr = parser.start(expr)
-        # expr = parser.start(expr) # pk il faut mettre une deuxieme fois ? (3 + 8i) * 2
+def ft_sum(expr, parser):
     tokens = split_operation(expr)
     result = 0
     value = 0
@@ -92,3 +87,19 @@ def calculator(expr, parser):
     if expr[0] == "+":
         return expr[1:]
     return expr
+
+def calculator(expr, parser):
+    expr = parser.start(expr)
+    tmp = expr
+    match = re.search(r"\([^\(\)]+\)", expr)
+    while match is not None:
+        new_expr = ft_sum(match.group()[1:-1], parser)
+        expr = expr.replace(match.group(), "({})".format(new_expr))
+        expr = parser.start(expr)
+        if tmp == expr:
+            expr = decompose(expr)
+            break
+        tmp = expr
+        match = re.search(r"\([^\(\)]+\)", expr)
+    expr = parser.start(expr)
+    return ft_sum(expr, parser)

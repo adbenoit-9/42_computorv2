@@ -111,7 +111,7 @@ class Parser:
                 value = "({})".format(self.data[name].image(param))
             expr = expr[:i] + str(value) + expr[j:]
         elif name not in math_funct:
-            raise ValueError("function '{}' is undefined.".format(name))
+            raise ValueError("function '{}' undefined.".format(name))
         return self.replace_funct(expr)
 
     def put_mul(self, expr):

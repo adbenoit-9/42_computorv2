@@ -10,13 +10,13 @@ class Function:
     def __init__(self, parser, expr, x='x'):
         if isinstance(expr, str) is False or isinstance(x, str) is False:
             raise ValueError('Function: type error')
-        if x.isalpha() is False or x in ['cos', 'sin', 'tan', 'abs', 'sqrt','i']:
+        if x.isalpha() is False or x in ['cos', 'sin', 'tan', 'abs', 'sqrt', 'i', 'exp']:
             raise ValueError("parameter '{}' is invalid".format(x))
-        regex = r"[^\d\+\-\*\%\/\^;,\.\[\]\(\)i " + x + "]+"
+        regex = r"[^\d\+\-\*\%\/\^;,\.\[\]\(\) ]+"
         match = re.search(regex, expr)
         if match is not None and \
-                match.group() not in ['cos', 'sin', 'tan', 'abs', 'sqrt']:
-            raise ValueError("variable '{}' is undefined".format(match.group()))
+                match.group() not in ['cos', 'sin', 'tan', 'abs', 'sqrt', 'i', 'exp', x]:
+            raise ValueError("variable '{}' undefined".format(match.group()))
         self.x = x
         self.expr = expr
         self.decomposed = decompose(self.expr)
@@ -27,7 +27,16 @@ class Function:
             param = "({})".format(x)
         else:
             param = str(x)
-        return self.expr.replace(self.x, param)
+        regex = r"[a-z]*" + self.x + r"[a-z]*\(?"
+        matches = re.finditer(regex, self.expr)
+        expr = self.expr
+        i = 0
+        for match in matches:
+            if match.group() == self.x:
+                expr = expr[:match.span()[0] + i] + param + expr[match.span()[1] + i:]
+                i += len(param) - len(self.x)
+        print(expr)
+        return expr
 
     def resolve(self, x, y, parser):
         '''
