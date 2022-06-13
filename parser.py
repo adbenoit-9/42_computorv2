@@ -1,7 +1,7 @@
 from ft_math import ft_abs, ft_sqrt
 from function import Function
-from ft_matrix import Matrix
 from ft_complex import Complex, isrealnumber
+from conversion import str_to_complex, str_to_matrix, str_to_value
 from utils import isnumber, rm_useless_brackets, put_space, extract_function
 import re, math
 from calculator import calculator, do_operation
@@ -63,10 +63,10 @@ class Parser:
         result = str(result)
         if result[-1] in "*/+-%^":
             raise ValueError('syntax error')
-        tmp = self.str_to_matrix(result)
+        tmp = str_to_matrix(result, self.data)
         if tmp is not None:
             return tmp.__repr__()
-        tmp = self.str_to_complex(result)
+        tmp = str_to_complex(result)
         if tmp is not None:
             return tmp.__repr__()
         result = result.replace(' ', '')
@@ -93,10 +93,10 @@ class Parser:
         j = i + len(funct)
         if len(param) == 0:
             raise ValueError('function parameter not found.')
-        param = self.str_to_value(param)
+        param = str_to_value(param, self.data)
         if isinstance(param, str):
             param = calculator(param, self)
-            param = self.str_to_value(param)
+            param = str_to_value(param, self.data)
         if name in math_funct.keys() and isrealnumber(param):
             value = math_funct[name](param)
             expr = expr[:i] + str(value) + expr[j:]
@@ -127,7 +127,7 @@ class Parser:
             expr = expr.replace(match.group(), "{}*{}"
                                 .format(match.group('x1'), match.group('x2')))
         elif match.group('x2') == 't':
-            mat = self.str_to_matrix(match.group('x1')[:-1])
+            mat = str_to_matrix(match.group('x1')[:-1], self.data)
             if mat is None:
                 raise ValueError("tranpose supported only by matrix")
             expr = expr.replace(match.group(), str(mat.T()))
@@ -136,7 +136,7 @@ class Parser:
         return self.put_mul(expr)
 
     def replace_var(self, expr):
-        matches = re.finditer(r"[\w_]+", expr)
+        matches = re.finditer(r"[a-z]+", expr)
         new_expr = expr
         for elem in matches:
             var = elem.group()
@@ -152,8 +152,8 @@ class Parser:
         operation = re.search(regex, expr)
         new_expr = expr
         while operation is not None:
-            x1 = self.str_to_value(operation.group('x1'))
-            x2 = self.str_to_value(operation.group('x2'))
+            x1 = str_to_value(operation.group('x1'), self.data)
+            x2 = str_to_value(operation.group('x2'), self.data)
             start, end = operation.span()
             if start != 0 and new_expr[start - 1] == '^':
                 x = do_operation(x1, x2, '*')
@@ -201,111 +201,47 @@ class Parser:
             return expr
         x1 = rm_useless_brackets(match.group('x1'))
         x2 = rm_useless_brackets(match.group('x2'))
-        x1 = self.str_to_value(x1)
-        x2 = self.str_to_value(x2)
+        x1 = str_to_value(x1, self.data)
+        x2 = str_to_value(x2, self.data)
         if isnumber(x1) is False:
-            x1 = self.str_to_value(match.group('x1'))
+            x1 = str_to_value(match.group('x1'), self.data)
         if isnumber(x2) is False:
-            x2 = self.str_to_value(match.group('x2'))
+            x2 = str_to_value(match.group('x2'), self.data)
         result = do_operation(x1, x2, '/')
-        if isinstance(result, str):
+        if isinstance(result, str) or (match.span()[0] != 0 and expr[match.span()[0] - 1] == '/'):
             tmp = self.do_division(expr[match.span()[1]:])
             return expr[:match.span()[1]] + tmp
         return expr[:match.span()[0]] + str(result) + expr[match.span()[1]:]
 
     def do_multiplication(self, expr):
-        regex = [r"(?P<x1>[\d\.]+|i)(?P<op>[\*%])(?P<x2>[-]?[\d\.]+|i)",
-                r"(?P<x1>[\d\.]+|i)(?P<op>[\*%])(?P<x2>\([\w\.\+\-\*\%]+\))",
-                r"\((?P<x1>[\w\.\+\-\*\%]+)\)(?P<op>[\*%])(?P<x2>\([\w\.\+\-\*\%]+\))"]
-        for i in range(3):
-            match = re.search(regex[i], expr)
-            if match is not None:
-                break
+        regex = r"[\w\.\[\],;]+([\*][\w\.\[\],;]+)+"
+        match = re.search(regex, expr)
         if match is None:
             return expr
-        x1 = rm_useless_brackets(match.group('x1'))
-        x2 = rm_useless_brackets(match.group('x2'))
-        op = match.group('op')
-        x1 = self.str_to_value(x1)
-        x2 = self.str_to_value(x2)
-        if isnumber(x1) is False:
-            x1 = self.str_to_value(match.group('x1'))
-        if isnumber(x2) is False:
-            x2 = self.str_to_value(match.group('x2'))
-        result = do_operation(x1, x2, op)
-        expr = expr[:match.span()[0]] + str(result) + expr[match.span()[1]:]
-        if isinstance(result, str) and op == '*':
-            i = result.find(op) + 1 + match.span()[0]
-            tmp = self.do_division(expr[i:])
-            return expr[:i] + tmp
-        return expr
+        if match.span()[0] != 0 and expr[match.span()[0] - 1] == '%':
+            return expr
+        tokens = match.group().split('*')
+        result = 1
+        for i in range(len(tokens)):
+            x = str_to_value(tokens[i], self.data)
+            result = do_operation(result, x, '*')
+        return expr.replace(match.group(), str(result))
+
+    def do_modulo(self, expr):
+        regex = r"[\w\.\[\],;]+([%][\w\.\[\],;]+)+"
+        match = re.search(regex, expr)
+        if match is None:
+            return expr
+        tokens = match.group().split('%')
+        x1 = str_to_value(tokens[0], self.data)
+        x2 = str_to_value(tokens[1], self.data)
+        result = do_operation(x1, x2, '%')
+        return expr.replace(match.group(), str(result))
 
     def reduce(self, expr):
         new_expr = self.do_division(expr)
         new_expr = self.do_multiplication(new_expr)
+        new_expr = self.do_modulo(new_expr)
         if new_expr == expr:
             return new_expr
         return self.reduce(new_expr)
-
-    def str_to_matrix(self, mat):
-        if isinstance(mat, str) is False:
-            raise ValueError("str_to_matrix: type '{}' not supported"
-                             .format(type(mat).__name__))
-        if len(mat) < 2:
-            return None
-        if mat[0] != '[' or mat[-1] != ']':
-            return None
-        rows = mat[1:-1].split(';')
-        lst = [[] for _ in range(len(rows))]
-        for i, row in enumerate(rows):
-            elem_lst = row[1:-1].split(',')
-            for elem in elem_lst:
-                lst[i].append(self.str_to_value(elem))
-        return Matrix(lst)
-
-    def str_to_complex(self, comp):
-        comp = comp.replace('-i', '-1*i')
-        if isinstance(comp, str) is False:
-            raise ValueError("str_to_complex: type '{}' not supported"
-                             .format(type(comp).__name__))
-        re_im = r"([-+]?[\d\.]+[+-])?([\d\.]+[\*]?)?i"
-        match = re.fullmatch(re_im, comp)
-        if match is None:
-            re_im = r"([+-]?[\d\.]+[\*]?)?i[+-][\d\.]+"
-            match = re.fullmatch(re_im, comp)
-            if match is None:
-                return None
-        re_nb = r"[+-]?[\d\.]+"
-        matches = list(re.finditer(re_nb, comp))
-        n = len(matches)
-        if n == 0:
-            return Complex(im=1)
-        elif n == 1:
-            if matches[0].span()[1] == len(comp):
-                return Complex(1, float(matches[0].group()))
-            if comp[matches[0].span()[1]] == '*' or comp[matches[0].span()[1]] == 'i':
-                return Complex(im=float(matches[0].group()))
-            return Complex(real=float(matches[0].group()), im=1)
-        elif comp[matches[0].span()[1]] == '*' or comp[matches[0].span()[1]] == 'i':
-                return Complex(im=float(matches[0].group()), real=float(matches[1].group()))
-        return Complex(real=float(matches[0].group()), im=float(matches[1].group()))
-
-    def str_to_value(self, x):
-        if isinstance(x, str) is False:
-            raise ValueError("str_to_value: type '{}' not supported"
-                             .format(type(x).__name__))
-        if x in self.data.keys() and isinstance(self.data[x], Function) is False:
-            return self.data[x]
-        comp = self.str_to_complex(x)
-        if comp is not None:
-            return comp
-        mat = self.str_to_matrix(x)
-        if mat is not None:
-            return mat
-        try:
-            x = float(x)
-            if x.is_integer():
-                return int(x)
-            return x
-        except Exception:
-            return x

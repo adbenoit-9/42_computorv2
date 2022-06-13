@@ -3,6 +3,7 @@ from ft_matrix import Matrix
 from decompose import decompose
 from utils import isrealnumber
 from ft_math import ft_abs
+from conversion import str_to_value
 
 
 def do_operation(x1, x2, op):
@@ -56,7 +57,7 @@ def split_operation(expr):
     return tokens
 
 
-def ft_sum(expr, parser):
+def ft_sum(expr):
     tokens = split_operation(expr)
     result = 0
     value = 0
@@ -66,7 +67,7 @@ def ft_sum(expr, parser):
         if token in '-+':
             op = token
             continue
-        value = parser.str_to_value(token)
+        value = str_to_value(token, {})
         if isinstance(value, str):
             if op is not None:
                 tmp.append(op + value)
@@ -93,7 +94,7 @@ def calculator(expr, parser):
     tmp = expr
     match = re.search(r"\([^\(\)]+\)", expr)
     while match is not None:
-        new_expr = ft_sum(match.group()[1:-1], parser)
+        new_expr = ft_sum(match.group()[1:-1])
         expr = expr.replace(match.group(), "({})".format(new_expr))
         expr = parser.start(expr)
         if tmp == expr:
@@ -102,4 +103,4 @@ def calculator(expr, parser):
         tmp = expr
         match = re.search(r"\([^\(\)]+\)", expr)
     expr = parser.start(expr)
-    return ft_sum(expr, parser)
+    return ft_sum(expr)

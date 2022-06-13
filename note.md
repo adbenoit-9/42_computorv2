@@ -53,7 +53,7 @@ stockage data: `dictionary`
     - [x] funA(2) + funB(4) = ? (funA(x) = 2 * 4 + x, funB(x) = 4 -5 + (x + 2)^2 - 4)
     - [x] funA(2) + funB(4) = ? (funA(x) = 2 * 4 + x, funB(y) = 43 * y / (4 % 2 * y)
     - [x] 4 / (2+i) = ? 
-    - [ ] ([[2,3];[4,3]] + [[2,3];[4,3]]) * 3
+    - [x] ([[2,3];[4,3]] + [[2,3];[4,3]]) * 3
     - [x] f(x) = exp(x)  => f(2) = ?
 ---
 # example

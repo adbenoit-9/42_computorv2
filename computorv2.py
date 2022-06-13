@@ -29,6 +29,18 @@ def data_to_str(data):
     return ret
 
 
+def resolve(name, x, y, parser):
+    try:
+        if name not in parser.data.keys():
+            raise ValueError("function '{}' undefined".format(name))
+        expr = str(parser.data[name])
+        expr = calculator(expr, parser)
+        funct = Function(expr)
+        funct.resolve(x, calculator(y, parser))
+    except ValueError:
+        print('non-solvable expression')
+
+
 def cli(data, cmd):
     parser = Parser(data, cmd)
     cmd = parser.cmd
@@ -39,12 +51,7 @@ def cli(data, cmd):
     elif cmd[1] == '?':
         result = calculator(cmd[0], parser)
     elif cmd[1].endswith('?'):
-        if type_ != 'function':
-            raise ValueError('syntax error')
-        if name not in data.keys():
-            raise ValueError("function '{}' undefined".format(name))
-        data[name].resolve(param, cmd[1][:-1], parser)
-        return None
+        return resolve(name, param, cmd[1][:-1], parser)
     else:
         if name.isalpha() is False:
             raise ValueError('illegal {} name: {}'.format(type_, name))
@@ -58,7 +65,7 @@ def cli(data, cmd):
                 raise ValueError("variable '{}' undefined".format(match.group()))
         else:
             expr = calculator(cmd[1], parser)
-            data[name] = Function(parser, expr, param)
+            data[name] = Function(expr, param)
         result = data[name]
     return parser.end(result)
 

@@ -1,4 +1,3 @@
-from posixpath import split
 import re
 from utils import rm_useless_brackets
 

@@ -137,6 +137,8 @@ class Polynomial:
                     print("{} = {} / {}".format(self.unknown, b, denom))
             elif denom != 1 and b != 0:
                 print("{} = {} / {}".format(self.unknown, b, denom))
+            if isinstance(x, float) and x.is_integer():
+                x = int(x)
             print("{} = {}".format(self.unknown, x))
             return True
         delta = self.coefs[1] * self.coefs[1] - 4 * \

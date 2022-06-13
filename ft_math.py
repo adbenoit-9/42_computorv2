@@ -1,6 +1,3 @@
-# from utils import isrealnumber
-
-
 def ft_sqrt(n):
     if n < 0:
         return None
