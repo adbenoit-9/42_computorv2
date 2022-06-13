@@ -1,16 +1,16 @@
 from ft_complex import Complex
 import re
 
+
 def ismatrix(mat):
     if isinstance(mat, str) is False:
         raise ValueError("ismatrix: type '{}' not supported"
-                            .format(type(mat).__name__))
+                         .format(type(mat).__name__))
     if len(mat) < 2:
         return False
     if mat[0] != '[' or mat[-1] != ']':
         return False
     rows = mat[1:-1].split(';')
-    lst = [[] for _ in range(len(rows))]
     for i, row in enumerate(rows):
         if len(row) < 2:
             return False
@@ -74,15 +74,15 @@ def rm_useless_brackets(expr):
                     expr = expr[:span[0]] + elem.group()[1:-1] + expr[span[1]:]
                     change = 1
                     break
-            except:
+            except Exception:
                 if ismatrix(elem.group()[1:-1]):
                     expr = expr[:span[0]] + elem.group()[1:-1] + expr[span[1]:]
                     change = 1
                     break
                 elif (elem.group()[1:-1].isalpha() and
                         (span[0] == 0 or expr[span[0] - 1].isalpha() is False)) or \
-                        ((span[0] == 0 or expr[span[0] - 1] in "(+-") and \
-                        (span[1] == len(expr) or expr[span[1]] in "+-)")):
+                        ((span[0] == 0 or expr[span[0] - 1] in "(+-") and
+                         (span[1] == len(expr) or expr[span[1]] in "+-)")):
                     expr = expr[:span[0]] + elem.group()[1:-1] + expr[span[1]:]
                     change = 1
                     break

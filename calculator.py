@@ -17,26 +17,27 @@ def do_operation(x1, x2, op):
         if isinstance(x1, int) and x1 == 0 and op in '*/':
             return 0
         return "{}{}{}".format(x1, op, x2)
-    if op == '+':
-        result = x1 + x2
-    elif op == '-':
-        result = x1 - x2
-    elif op == '*':
-        result = x1 * x2
-    elif op == '/':
-        result = x1 / x2
-    elif op == '%':
-        result = ft_abs(x1) % ft_abs(x2)
-        result =  -result if x1 < 0 else result
-    elif op == '^':
-        result = x1 ** x2
-    elif op == '**':
-        if isinstance(x1, Matrix) is False and isinstance(x2, Matrix):
-            raise ValueError("operator '**' not supported between '{}' and '{}'."
-                            .format(type(x1).__name__, type(x2).__name__))
-        result = x1.dot(x2)
-    else:
-        raise ValueError("operator '{}' not supported.".format(op))
+    try:
+        if op == '+':
+            result = x1 + x2
+        elif op == '-':
+            result = x1 - x2
+        elif op == '*':
+            result = x1 * x2
+        elif op == '/':
+            result = x1 / x2
+        elif op == '%':
+            result = ft_abs(x1) % ft_abs(x2)
+            result = -result if x1 < 0 else result
+        elif op == '^':
+            result = x1 ** x2
+        elif op == '**':
+            result = x1.dot(x2)
+        else:
+            raise ValueError("operator '{}' not supported.".format(op))
+    except TypeError:
+        raise ValueError("operator '{}' not supported between '{}' and '{}'."
+                         .format(op, type(x1).__name__, type(x2).__name__))
     return result
 
 
@@ -57,7 +58,7 @@ def split_operation(expr):
     return tokens
 
 
-def ft_sum(expr):
+def do_sum(expr):
     tokens = split_operation(expr)
     result = 0
     value = 0
@@ -89,18 +90,20 @@ def ft_sum(expr):
         return expr[1:]
     return expr
 
-def calculator(expr, parser):
+
+def calculator(expr, parser, option=0):
     expr = parser.start(expr)
     tmp = expr
     match = re.search(r"\([^\(\)]+\)", expr)
     while match is not None:
-        new_expr = ft_sum(match.group()[1:-1])
+        new_expr = do_sum(match.group()[1:-1])
         expr = expr.replace(match.group(), "({})".format(new_expr))
         expr = parser.start(expr)
         if tmp == expr:
-            expr = decompose(expr)
+            if option == 0:
+                expr = decompose(expr)
             break
         tmp = expr
         match = re.search(r"\([^\(\)]+\)", expr)
     expr = parser.start(expr)
-    return ft_sum(expr)
+    return do_sum(expr)

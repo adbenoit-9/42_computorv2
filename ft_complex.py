@@ -141,7 +141,8 @@ class Complex:
 
     def __pow__(self, n):
         if isinstance(n, int) is False:
-            raise ValueError("invalid power type '{}'".format(type(n).__name__))
+            raise ValueError("invalid power type '{}'"
+                             .format(type(n).__name__))
         if n < 0:
             raise ValueError("negative power not supported")
         res = self.copy()
@@ -171,11 +172,11 @@ class Complex:
         if self.real != 0:
             s += str(self.real)
         if self.im > 0 and self.real:
-            s += '+'                                            
+            s += '+'
         if self.im < 0:
             s += '-'
-        if self.im:
-            s += str(ft_abs(self.im)) + '*'
+        if ft_abs(self.im) != 1 and self.im:
+            s += str(ft_abs(self.im))
         if self.im:
             s += 'i'
         if self.real == 0 and self.im == 0:

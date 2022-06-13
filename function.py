@@ -6,14 +6,15 @@ import re
 
 class Function:
     def __init__(self, expr, x='x'):
+        forbidden = ['cos', 'sin', 'tan', 'abs', 'sqrt', 'i', 'exp']
         if isinstance(expr, str) is False or isinstance(x, str) is False:
             raise ValueError('Function: type error')
-        if x.isalpha() is False or x in ['cos', 'sin', 'tan', 'abs', 'sqrt', 'i', 'exp']:
+        if x.isalpha() is False or x in forbidden:
             raise ValueError("parameter '{}' is invalid".format(x))
         regex = r"[^\d\+\-\*\%\/\^;,\.\[\]\(\) ]+"
         match = re.search(regex, expr)
         if match is not None and \
-                match.group() not in ['cos', 'sin', 'tan', 'abs', 'sqrt', 'i', 'exp', x]:
+                match.group() not in forbidden and match.group() != x:
             raise ValueError("variable '{}' undefined".format(match.group()))
         self.x = x
         self.expr = expr
@@ -29,7 +30,8 @@ class Function:
         i = 0
         for match in matches:
             if match.group() == self.x:
-                expr = expr[:match.span()[0] + i] + param + expr[match.span()[1] + i:]
+                expr = expr[:match.span()[0] + i] + param + \
+                       expr[match.span()[1] + i:]
                 i += len(param) - len(self.x)
         expr = rm_useless_brackets(expr)
         return expr
@@ -43,6 +45,7 @@ class Function:
         expr = self.image(x)
         print('{} = {}'.format(put_space(expr), y))
         expr = self.image('X')
+        y = str(y).replace(x, 'X')
         eq = Polynomial('{} = {}'.format(expr, y), x)
         eq.resolve()
 

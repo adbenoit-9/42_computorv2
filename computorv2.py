@@ -1,3 +1,4 @@
+from http.client import error
 from parser import Parser
 from calculator import calculator
 from ft_matrix import Matrix
@@ -30,12 +31,12 @@ def data_to_str(data):
 
 
 def resolve(name, x, y, parser):
+    if name not in parser.data.keys():
+        raise ValueError("function '{}' undefined".format(name))
+    expr = str(parser.data[name].image(x))
+    expr = calculator(expr, parser)
+    funct = Function(expr, x)
     try:
-        if name not in parser.data.keys():
-            raise ValueError("function '{}' undefined".format(name))
-        expr = str(parser.data[name])
-        expr = calculator(expr, parser)
-        funct = Function(expr)
         funct.resolve(x, calculator(y, parser))
     except ValueError:
         print('non-solvable expression')
@@ -62,9 +63,10 @@ def cli(data, cmd):
             regex = r"[a-z]+"
             match = re.search(regex, data[name])
             if match is not None and match.group() != 'i':
-                raise ValueError("variable '{}' undefined".format(match.group()))
+                raise ValueError("variable '{}' undefined"
+                                 .format(match.group()))
         else:
-            expr = calculator(cmd[1], parser)
+            expr = calculator(cmd[1], parser, 1)
             data[name] = Function(expr, param)
         result = data[name]
     return parser.end(result)

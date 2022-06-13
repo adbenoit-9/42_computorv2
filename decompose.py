@@ -4,9 +4,9 @@ from utils import rm_useless_brackets
 
 def get_factored_expr(expr):
     regex = [r"(?P<x1>[\w\.]+)[\*]\((?P<x2>[\w\.\+\-\*\/]+)\)",
-            r"\((?P<x1>[\w\.\+\-\*\/]+)\)[\*](?P<x2>[\w\.]+)",
-            r"\((?P<x1>[\w\.\+\-\*\/]+)\)[\*](?P<x2>\([\w\.\+\-\*\/]+\))",
-            r"\((?P<x1>[\w\.\+\-\*\/]+)\)[/](?P<x2>[\w\.]+)"]
+             r"\((?P<x1>[\w\.\+\-\*\/]+)\)[\*](?P<x2>[\w\.]+)",
+             r"\((?P<x1>[\w\.\+\-\*\/]+)\)[\*](?P<x2>\([\w\.\+\-\*\/]+\))",
+             r"\((?P<x1>[\w\.\+\-\*\/]+)\)[/](?P<x2>[\w\.]+)"]
     for i in range(4):
         match = re.search(regex[i], expr)
         if match is None:
@@ -38,6 +38,7 @@ def add_plus(expr):
     expr = expr.replace(match.group(), new_expr)
     return add_plus(expr)
 
+
 def op_to_str(x1, x2, op):
     if x2 == "1":
         return x1
@@ -50,6 +51,7 @@ def op_to_str(x1, x2, op):
             return x2
     return x1 + op + x2
 
+
 def decompose(expr):
     expr = expr.replace(' ', '')
     expr = rm_useless_brackets(expr)
@@ -57,7 +59,7 @@ def decompose(expr):
     matches = re.finditer(regex, expr)
     for match in matches:
         new_expr = power_to_mul(match.group('x'), match.group('pow'))
-        expr  = expr.replace(match.group(), new_expr)
+        expr = expr.replace(match.group(), new_expr)
     match, tokens = get_factored_expr(expr)
     if match is None:
         return expr
@@ -79,6 +81,6 @@ def decompose(expr):
             for k in range(len(tokens[i])):
                 if len(new_expr):
                     new_expr += '+'
-                new_expr += op_to_str(tokens[i- 1][j], tokens[i][k], op)
+                new_expr += op_to_str(tokens[i - 1][j], tokens[i][k], op)
     expr = expr.replace(match, '({})'.format(new_expr))
     return decompose(expr)

@@ -18,7 +18,8 @@ def ft_sqrt(n):
 
 def ft_abs(n):
     if isinstance(n, int) is False and isinstance(n, float) is False:
-        raise ValueError("bad operand type for abs: '{}'".format(type(n).__name__))
+        raise TypeError("bad operand type for abs: '{}'"
+                        .format(type(n).__name__))
     if n > 0:
         return n
     return n * -1
