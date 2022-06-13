@@ -92,9 +92,8 @@ def rm_useless_brackets(expr):
 
 def put_space(expr):
     matches = re.finditer(r"[^\w\^\.\(\)\[\],;\|]+", expr)
-    op = []
+    i = 0
     for elem in matches:
-        if elem.group() not in op:
-            expr = expr.replace(elem.group(), " {} ".format(elem.group()))
-        op.append(elem.group())
+        expr = expr[:elem.span()[0] + i] + " {} ".format(elem.group()) + expr[elem.span()[1] + i:]
+        i += 2
     return expr.strip()
