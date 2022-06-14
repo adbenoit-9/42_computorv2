@@ -1,4 +1,3 @@
-from http.client import error
 from parser import Parser
 from calculator import calculator
 from ft_matrix import Matrix
