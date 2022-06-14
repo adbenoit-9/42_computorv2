@@ -54,6 +54,11 @@ $ python3 computorv2.py
 > funct_name(var_name) = expression ?
 ```
 
+### Resolution of a computation
+```
+> computation = ?
+```
+
 ### Matrix
 
 syntax: `[[A0-0, A0-1, ...]; [A1-0, A1-1, ...]; ...]` A ∈ Mn-p(Q)\
