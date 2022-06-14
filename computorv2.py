@@ -65,7 +65,7 @@ def cli(data, cmd):
             for match in matches:
                 if match.group() != 'i':
                     raise ValueError("variable '{}' undefined"
-                                    .format(match.group()))
+                                     .format(match.group()))
         else:
             expr = calculator(cmd[1], parser, 1)
             data[name] = Function(expr, param)
