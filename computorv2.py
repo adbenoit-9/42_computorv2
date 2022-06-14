@@ -12,7 +12,7 @@ def isfunction(expr):
     if index == -1:
         return expr, None
     end = expr.find(')')
-    if end == -1:
+    if end == -1 or end == index + 1:
         raise ValueError('syntax error')
     return expr[:index], expr[index + 1:end]
 
@@ -97,8 +97,8 @@ def main():
             print(err)
         except ZeroDivisionError as err:
             print(err)
-        except Exception:
-            print('command failed')
+        # except Exception:
+        #     print('command failed')
     return 0
 
 

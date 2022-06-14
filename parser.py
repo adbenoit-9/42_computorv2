@@ -1,5 +1,6 @@
 from ft_math import ft_abs, ft_sqrt
 from function import Function
+from ft_matrix import Matrix
 from ft_complex import Complex, isrealnumber
 from conversion import str_to_complex, str_to_matrix, str_to_value
 from utils import isnumber, rm_useless_brackets, put_space, extract_function
@@ -17,6 +18,8 @@ class Parser:
                              .format(type(cmd).__name__))
         if data is None:
             data = {}
+        if re.search(r"\(\)", cmd) or re.search(r"[\/\%]{2}", cmd) or re.search(r"(\*[\/%])|([\/%]\*)|\*{3}", cmd):
+            raise ValueError('syntax error')
         self.data = data
         tokens = cmd.lower().split()
         if len(tokens) == 2 and tokens[0] == "show" and tokens[1] == "data":
@@ -54,7 +57,6 @@ class Parser:
         expr = expr.replace(' ', '')
         expr = self.replace_var(expr)
         expr = self.put_mul(expr)
-        expr = self.replace_funct(expr)
         expr = self.put_pow(expr)
         expr = self.calculate_pow(expr).replace('-+', '-')
         expr = rm_useless_brackets(expr)
@@ -63,7 +65,7 @@ class Parser:
 
     def end(self, result):
         result = str(result)
-        if result[-1] in "*/+-%^":
+        if result[-1] in "*/+-%^" or result in ';.,':
             raise ValueError('syntax error')
         tmp = str_to_matrix(result, self.data)
         if tmp is not None:
@@ -119,23 +121,15 @@ class Parser:
 
     def put_mul(self, expr):
         expr = expr.replace(')(', ')*(')
-        regex = r"(?P<x1>[\d\[\];,\.]+)(?P<x2>([A-Za-z]+|\(|\[))"
+        regex = r"(?P<x1>[\d]+)(?P<x2>([a-z]+))"
         match = re.search(regex, expr)
         if match is None:
-            regex = r"(?P<x1>[A-Za-z]+|\)|\])(?P<x2>[\d\[\];,\.]+)"
+            regex = r"(?P<x1>[a-z]+)(?P<x2>[\d]+)"
             match = re.search(regex, expr)
             if match is None:
                 return expr
-        if match.group('x1')[-1] != '.':
-            expr = expr.replace(match.group(), "{}*{}"
-                                .format(match.group('x1'), match.group('x2')))
-        elif match.group('x2') == 't':
-            mat = str_to_matrix(match.group('x1')[:-1], self.data)
-            if mat is None:
-                raise ValueError("tranpose supported only by matrix")
-            expr = expr.replace(match.group(), str(mat.T()))
-        else:
-            raise ValueError("syntax error")
+        expr = expr.replace(match.group(), "{}*{}"
+                            .format(match.group('x1'), match.group('x2')))
         return self.put_mul(expr)
 
     def replace_var(self, expr):
@@ -230,9 +224,11 @@ class Parser:
         return expr[:match.span()[0]] + str(result) + expr[match.span()[1]:]
 
     def do_multiplication(self, expr):
-        regex = r"[\w\.]+([\*]\-?[\w\.]+)+"
+        regex = r"[\w\.]+([\*]{1,2}\-?[\w\.]+)+"
         matches = re.finditer(regex, expr)
         for match in matches:
+            if re.search(r'\*{2}', match.group()):
+                raise ValueError("operator '**' supported only between matrices")
             if match.span()[0] != 0 and expr[match.span()[0] - 1] == '%':
                 return expr
             tokens = match.group().split('*')
@@ -243,6 +239,8 @@ class Parser:
                 if isinstance(result, str) and i != len(tokens) - 1:
                     x2 = str_to_value(tokens[i + 1], self.data)
                     if isinstance(x2, str):
+                        if x2 in '.;,':
+                            raise ValueError('syntax error')
                         raise ValueError('multiple unknowns not supported')
             tmp = expr
             expr = expr.replace(match.group(), str(result))
@@ -254,6 +252,8 @@ class Parser:
         rg = [r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
               r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\-?[\w\.]+",
               r"[\w\.]+(?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
+              r"\[[\w\.\[\],;\-\+]+\](?P<op>\.t)",
+              r"\(\[[\w\.\[\],;\-\+]+\]\)(?P<op>\.t)",
               r"\([\di\.\-\+\*]+\)(?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
               r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\([\di\.\-\+\*]+\)"]
         for i in range(len(rg)):
@@ -264,19 +264,25 @@ class Parser:
             return expr
         op = match.group('op')
         tokens = match.group().split(op)
-        if i == 3:
+        if i == 4 or i == 5:
             tokens[0] = tokens[0][1:-1]
-        elif i == 4:
+        elif i == 6:
             tokens[1] = tokens[1][1:-1]
         result = str_to_value(tokens[0], self.data)
-        for i in range(1, len(tokens)):
-            x = str_to_value(tokens[i], self.data)
-            result = do_operation(result, x, op)
+        if op == '.t':
+            if isinstance(result, Matrix):
+                result = result.T()
+            else:
+                raise ValueError('transpose supported only by matrices')
+        else:
+            for i in range(1, len(tokens)):
+                x = str_to_value(tokens[i], self.data)
+                result = do_operation(result, x, op)
         expr = expr.replace(match.group(), str(result))
         return expr
 
     def do_modulo(self, expr):
-        regex = r"[\w\.\[\],;]+([%][\w\.\[\],;]+)+"
+        regex = r"[\w\.\[\],;]+(%[+-]?[\w\.\[\],;]+)+"
         match = re.search(regex, expr)
         if match is None:
             return expr
