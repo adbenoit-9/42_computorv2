@@ -55,6 +55,7 @@ stockage data: `dictionary`
     - [x] 4 / (2+i) = ? 
     - [x] ([[2,3];[4,3]] + [[2,3];[4,3]]) * 3
     - [x] f(x) = exp(x)  => f(2) = ?
+    - [x] op matrix / complex
 ---
 # example
 ```

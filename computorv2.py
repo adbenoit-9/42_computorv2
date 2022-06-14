@@ -61,10 +61,11 @@ def cli(data, cmd):
         if type_ == 'variable':
             data[name] = calculator(cmd[1], parser)
             regex = r"[a-z]+"
-            match = re.search(regex, data[name])
-            if match is not None and match.group() != 'i':
-                raise ValueError("variable '{}' undefined"
-                                 .format(match.group()))
+            matches = re.finditer(regex, data[name])
+            for match in matches:
+                if match.group() != 'i':
+                    raise ValueError("variable '{}' undefined"
+                                    .format(match.group()))
         else:
             expr = calculator(cmd[1], parser, 1)
             data[name] = Function(expr, param)
@@ -97,8 +98,8 @@ def main():
             print(err)
         except ZeroDivisionError as err:
             print(err)
-        # except Exception:
-        #     print('command failed')
+        except Exception:
+            print('command failed')
     return 0
 
 

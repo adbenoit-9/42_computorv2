@@ -54,9 +54,13 @@ def extract_function(expr, option=None):
             count -= 1
         end += 1
     param = expr[begin:end - 1]
-    if option is None and name in ['cos', 'sin', 'tan', 'exp', 'abs', 'sqrt']\
-            and re.search(r"[a-z]", param):
-        return expr, None
+    if option is None and name in ['cos', 'sin', 'tan', 'exp', 'abs', 'sqrt']:
+        matches = re.finditer(r"[a-z]+", param)
+        for match in matches:
+            if match.group() != 'i':
+                return expr, None
+            elif name != 'abs':
+                raise ValueError("{}: complex not supported".format(name))
     return name, param
 
 

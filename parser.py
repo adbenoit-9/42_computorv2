@@ -38,7 +38,7 @@ class Parser:
         if i != 0 or j != 0:
             raise ValueError('syntax error')
         self.cmd = cmd.lower().split('=')
-        if len(self.cmd) != 2 or len(self.cmd[1]) == 0:
+        if len(self.cmd) != 2 or len(self.cmd[1]) == 0 or len(self.cmd[0]) == 0:
             raise ValueError('syntax error')
         for i in range(len(self.cmd)):
             self.cmd[i] = self.cmd[i].strip()
@@ -56,7 +56,7 @@ class Parser:
         expr = self.put_mul(expr)
         expr = self.replace_funct(expr)
         expr = self.put_pow(expr)
-        expr = self.calculate_pow(expr)
+        expr = self.calculate_pow(expr).replace('-+', '-')
         expr = rm_useless_brackets(expr)
         expr = self.reduce(expr)
         return expr
@@ -119,10 +119,10 @@ class Parser:
 
     def put_mul(self, expr):
         expr = expr.replace(')(', ')*(')
-        regex = r"(?P<x1>[\d\[\];,\.]+)(?P<x2>[A-Za-z]+)"
+        regex = r"(?P<x1>[\d\[\];,\.]+)(?P<x2>([A-Za-z]+|\(|\[))"
         match = re.search(regex, expr)
         if match is None:
-            regex = r"(?P<x1>[A-Za-z]+)(?P<x2>[\d\[\];,\.]+)"
+            regex = r"(?P<x1>[A-Za-z]+|\)|\])(?P<x2>[\d\[\];,\.]+)"
             match = re.search(regex, expr)
             if match is None:
                 return expr
@@ -147,11 +147,12 @@ class Parser:
             if name in self.data.keys():
                 value = self.data[name]
                 if isinstance(value, Function) is False:
-                    new_expr = new_expr.replace(var, str(value))
+                    new_expr = new_expr[:elem.span()[0]] + "({})".format(str(value))\
+                               + new_expr[elem.span()[1]:]
         return new_expr
 
     def calculate_pow(self, expr):
-        regex = r"(?P<x1>[+-]?[\d\.\[\];,]+|i)[\^](?P<x2>[-+]?[\d\.]+)"
+        regex = r"(?P<x1>[\d\.\[\];,]+|i)[\^](?P<x2>[-+]?[\d\.]+)"
         operation = re.search(regex, expr)
         new_expr = expr
         while operation is not None:
@@ -252,8 +253,10 @@ class Parser:
     def do_matrix_operation(self, expr):
         rg = [r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
               r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\-?[\w\.]+",
-              r"[\w\.]+(?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]"]
-        for i in range(3):
+              r"[\w\.]+(?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
+              r"\([\di\.\-\+\*]+\)(?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
+              r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\([\di\.\-\+\*]+\)"]
+        for i in range(len(rg)):
             match = re.search(rg[i], expr)
             if match is not None:
                 break
@@ -261,6 +264,10 @@ class Parser:
             return expr
         op = match.group('op')
         tokens = match.group().split(op)
+        if i == 3:
+            tokens[0] = tokens[0][1:-1]
+        elif i == 4:
+            tokens[1] = tokens[1][1:-1]
         result = str_to_value(tokens[0], self.data)
         for i in range(1, len(tokens)):
             x = str_to_value(tokens[i], self.data)
