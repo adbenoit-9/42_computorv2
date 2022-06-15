@@ -25,6 +25,12 @@ class Parser:
             self.cmd = [tokens[0] + ' ' + tokens[1]]
             return
         cmd = cmd.replace(' ', '')
+        re_abs = r"\|.+\|"
+        match = re.search(re_abs, cmd)
+        while match is not None:
+            cmd = cmd.replace(match.group(),
+                              "abs({})".format(match.group()[1:-1]))
+            match = re.search(re_abs, cmd)
         if self.command_syntax(cmd) is False:
             raise ValueError('syntax error')
         self.cmd = cmd.lower().split('=')
@@ -42,12 +48,6 @@ class Parser:
         if re.search(r"\(\)", cmd) or re.search(r"[\/\%]{2}", cmd) or \
                 re.search(r"(\*[\/%])|([\/%]\*)|\*{3}", cmd):
             return False
-        re_abs = r"\|.+\|"
-        match = re.search(re_abs, cmd)
-        while match is not None:
-            cmd = cmd.replace(match.group(),
-                              "abs({})".format(match.group()[1:-1]))
-            match = re.search(re_abs, cmd)
         re_illegal_char = r"[^\w\_\+\-\*\/\(\)\[\];,\.\%\^=\?]"
         match = re.search(re_illegal_char, cmd)
         if match:
