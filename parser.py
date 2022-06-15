@@ -236,7 +236,7 @@ class Parser:
             x2 = str_to_value(match.group('x2'), self.data)
         result = do_operation(x1, x2, '/')
         if isinstance(result, str) or (match.span()[0] != 0 and
-                                       expr[match.span()[0] - 1] == '/'):
+                                       expr[match.span()[0] - 1] in '/^'):
             tmp = self.do_division(expr[match.span()[1]:])
             return expr[:match.span()[1]] + tmp
         if isrealnumber(result):
