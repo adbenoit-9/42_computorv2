@@ -19,59 +19,60 @@ class Parser:
                              .format(type(cmd).__name__))
         if data is None:
             data = {}
-        if re.search(r"\(\)", cmd) or re.search(r"[\/\%]{2}", cmd) or \
-                re.search(r"(\*[\/%])|([\/%]\*)|\*{3}", cmd):
-            raise ValueError('syntax error')
         self.data = data
         tokens = cmd.lower().split()
         if len(tokens) == 2 and tokens[0] == "show" and tokens[1] == "data":
             self.cmd = [tokens[0] + ' ' + tokens[1]]
             return
         cmd = cmd.replace(' ', '')
-        regex = r"\|.+\|"
-        match = re.search(regex, cmd)
-        while match is not None:
-            cmd = cmd.replace(match.group(),
-                              "abs({})".format(match.group()[1:-1]))
-            match = re.search(regex, cmd)
-        regex = r"[^\w\_\+\-\*\/\(\)\[\];,\.\%\^=\?]"
-        match = re.search(regex, cmd)
-        if match:
-            raise ValueError('illegal character: {}'.format(match.group()))
-        regex = r"[\*\/\%\^\+\-=\.\(\)\[;,]\."
-        if re.search(regex, cmd):
-            raise ValueError('syntax error')
-        regex1 = r"\[\[.*\](;\[.*\])+\]"
-        regex2 = r"\[.*(,.*)+\]"
-        if (cmd.find(';') != -1 and re.search(regex1, cmd) is None) or \
-                (cmd.find(',') != -1 and re.search(regex2, cmd) is None):
-            raise ValueError('syntax error')
-        i = cmd.count('(') - cmd.count(')')
-        j = cmd.count('[') - cmd.count(']')
-        if check_brackets(cmd) is False:
+        if self.command_syntax(cmd) is False:
             raise ValueError('syntax error')
         self.cmd = cmd.lower().split('=')
         if len(self.cmd) != 2 or len(self.cmd[1]) == 0 or \
                 len(self.cmd[0]) == 0:
             raise ValueError('syntax error')
         for i in range(len(self.cmd)):
-            self.cmd[i] = self.cmd[i].strip()
             if self.cmd[i][-1] in "*/+-%^":
                 raise ValueError('syntax error')
             if '?' in self.cmd[i]:
                 if i == 0 or '?' in self.cmd[i][:-1]:
                     raise ValueError('syntax error')
 
+    def command_syntax(self, cmd):
+        if re.search(r"\(\)", cmd) or re.search(r"[\/\%]{2}", cmd) or \
+                re.search(r"(\*[\/%])|([\/%]\*)|\*{3}", cmd):
+            return False
+        re_abs = r"\|.+\|"
+        match = re.search(re_abs, cmd)
+        while match is not None:
+            cmd = cmd.replace(match.group(),
+                              "abs({})".format(match.group()[1:-1]))
+            match = re.search(re_abs, cmd)
+        re_illegal_char = r"[^\w\_\+\-\*\/\(\)\[\];,\.\%\^=\?]"
+        match = re.search(re_illegal_char, cmd)
+        if match:
+            raise ValueError('illegal character: {}'.format(match.group()))
+        re_point = r"[\*\/\%\^\+\-=\.\(\)\[;,]\."
+        if re.search(re_point, cmd):
+            return False
+        re_semicolon = r"\[\[.*\](;\[.*\])+\]"
+        re_coma = r"\[.*(,.*)+\]"
+        if (cmd.find(';') != -1 and re.search(re_semicolon, cmd) is None) or \
+                (cmd.find(',') != -1 and re.search(re_coma, cmd) is None):
+            return False
+        if check_brackets(cmd) is False:
+            return False
+        return True
+
     def start(self, expr):
         if isinstance(expr, str) is False:
             raise ValueError('Parser: invalid argument')
         expr = expr.replace(' ', '')
-        expr = self.replace_var(expr)
-        expr = self.put_mul(expr)
-        expr = self.replace_funct(expr)
-        expr = self.put_pow(expr)
-        expr = self.calculate_pow(expr).replace('-+', '-')
-        expr = expr.replace('+-', '-')
+        expr = self.standardize_mul(expr)
+        expr = self.put_variables(expr)
+        expr = self.put_functions(expr)
+        expr = self.factor_power(expr)
+        expr = self.compute_power(expr)
         expr = rm_useless_brackets(expr)
         expr = self.reduce(expr)
         return expr
@@ -91,7 +92,7 @@ class Parser:
             name, param = extract_function(result, "abs")
         return put_space(result)
 
-    def replace_funct(self, expr):
+    def put_functions(self, expr):
         math_funct = {
             'cos': math.cos,
             'sin': math.sin,
@@ -127,27 +128,9 @@ class Parser:
             expr = expr[:i] + str(value) + expr[j:]
         elif name not in math_funct:
             raise ValueError("function '{}' undefined.".format(name))
-        return self.replace_funct(expr)
+        return self.put_functions(expr)
 
-    def put_mul(self, expr):
-        expr = expr.replace(')(', ')*(')
-        expr = expr.replace('-(', '-1*(')
-        regex = [r"(?P<x1>\d+\.?\d*)(?P<x2>([a-su-z]|[a-z]{2,}))",
-                 r"(?P<x1>[a-z])(?P<x2>[\d\.]+)",
-                 r"(?P<x1>\d+\.?\d*)(?P<x2>\()",
-                 r"(?P<x1>\))(?P<x2>[\d\.]+)"]
-        match = None
-        for i in range(len(regex)):
-            match = re.search(regex[i], expr)
-            if match:
-                break
-        if match is None:
-            return expr
-        expr = expr.replace(match.group(), "{}*{}"
-                            .format(match.group('x1'), match.group('x2')))
-        return self.put_mul(expr)
-
-    def replace_var(self, expr):
+    def put_variables(self, expr):
         matches = re.finditer(r"[a-z]+", expr)
         new_expr = expr
         i = 0
@@ -163,28 +146,25 @@ class Parser:
                     i += len(str(value)) + 2 - len(elem.group())
         return new_expr
 
-    def calculate_pow(self, expr):
-        regex = r"(?P<x1>[\d\.\[\];,]+|i)[\^](?P<x2>[-+]?[\d\.]+)"
-        operation = re.search(regex, expr)
-        new_expr = expr
-        while operation is not None:
-            x1 = str_to_value(operation.group('x1'), self.data)
-            x2 = str_to_value(operation.group('x2'), self.data)
-            start, end = operation.span()
-            if start != 0 and new_expr[start - 1] == '^':
-                x = do_operation(x1, x2, '*')
-            else:
-                x = do_operation(x1, x2, '^')
-            if (isrealnumber(x) is False or x > 0) and \
-                    (start == 0 or new_expr[start - 1] not in '*/%^-+'):
-                new_expr = '{}+{}{}'.format(new_expr[:start], x,
-                                            new_expr[end:])
-            else:
-                new_expr = '{}{}{}'.format(new_expr[:start], x, new_expr[end:])
-            operation = re.search(regex, new_expr)
-        return new_expr
+    def standardize_mul(self, expr):
+        expr = expr.replace(')(', ')*(')
+        expr = expr.replace('-(', '-1*(')
+        regex = [r"(?P<x1>\d+\.?\d*)(?P<x2>([a-su-z]|[a-z]{2,}))",
+                 r"(?P<x1>[a-z])(?P<x2>[\d\.]+)",
+                 r"(?P<x1>\d+\.?\d*)(?P<x2>\()",
+                 r"(?P<x1>\))(?P<x2>[\d\.]+)"]
+        match = None
+        for i in range(len(regex)):
+            match = re.search(regex[i], expr)
+            if match:
+                break
+        if match is None:
+            return expr
+        expr = expr.replace(match.group(), "{}*{}"
+                            .format(match.group('x1'), match.group('x2')))
+        return self.standardize_mul(expr)
 
-    def put_pow(self, expr):
+    def factor_power(self, expr):
         regex = r"[\w\^\.]+([*][\w\^\.]+)+"
         matches = list(re.finditer(regex, expr))
         i = 0
@@ -216,12 +196,33 @@ class Parser:
             i += 1
         return expr
 
-    def do_division(self, expr):
-        regex = [r"(?P<x1>[\d\.]+|i)\/(?P<x2>[-]?[\d\.]+|i)",
-                 r"(?P<x1>[\d\.]+|i)\/\((?P<x2>[\w\.\+\-\*\%]+)\)",
-                 r"\((?P<x1>[\w\.\+\-\*\%]+)\)\/\((?P<x2>[\w\.\+\-\*\%]+)\)"]
+    def compute_power(self, expr):
+        re_pow = r"(?P<x1>[\d\.\[\];,]+|i)[\^](?P<x2>[-+]?[\d\.]+)"
+        operation = re.search(re_pow, expr)
+        new_expr = expr
+        while operation is not None:
+            x1 = str_to_value(operation.group('x1'), self.data)
+            x2 = str_to_value(operation.group('x2'), self.data)
+            start, end = operation.span()
+            if start != 0 and new_expr[start - 1] == '^':
+                x = do_operation(x1, x2, '*')
+            else:
+                x = do_operation(x1, x2, '^')
+            if (isrealnumber(x) is False or x > 0) and \
+                    (start == 0 or new_expr[start - 1] not in '*/%^-+'):
+                new_expr = '{}+{}{}'.format(new_expr[:start], x,
+                                            new_expr[end:])
+            else:
+                new_expr = '{}{}{}'.format(new_expr[:start], x, new_expr[end:])
+            operation = re.search(re_pow, new_expr)
+        return new_expr.replace('-+', '-').replace('+-', '-')
+
+    def compute_division(self, expr):
+        re_div = [r"(?P<x1>[\d\.]+|i)\/(?P<x2>[-]?[\d\.]+|i)",
+                  r"(?P<x1>[\d\.]+|i)\/\((?P<x2>[\w\.\+\-\*\%]+)\)",
+                  r"\((?P<x1>[\w\.\+\-\*\%]+)\)\/\((?P<x2>[\w\.\+\-\*\%]+)\)"]
         for i in range(3):
-            match = re.search(regex[i], expr)
+            match = re.search(re_div[i], expr)
             if match is not None:
                 break
         if match is None:
@@ -237,21 +238,21 @@ class Parser:
         result = do_operation(x1, x2, '/')
         if isinstance(result, str) or (match.span()[0] != 0 and
                                        expr[match.span()[0] - 1] in '/^'):
-            tmp = self.do_division(expr[match.span()[1]:])
+            tmp = self.compute_division(expr[match.span()[1]:])
             return expr[:match.span()[1]] + tmp
         if isrealnumber(result):
             return expr[:match.span()[0]] + '{:f}'.format(result) + \
                    expr[match.span()[1]:]
         return expr[:match.span()[0]] + str(result) + expr[match.span()[1]:]
 
-    def do_multiplication(self, expr):
-        regex = r"[\w\.]+([\*]{1,2}\-?[\w\.]+)+"
-        matches = re.finditer(regex, expr)
+    def compute_multiplication(self, expr):
+        re_mul = r"[\w\.]+([\*]{1,2}\-?[\w\.]+)+"
+        matches = re.finditer(re_mul, expr)
         for match in matches:
             if re.search(r'\*{2}', match.group()):
                 raise ValueError("operator '**' supported only between matrices")
             if match.span()[0] != 0 and expr[match.span()[0] - 1] == '%':
-                return expr
+                return expr.replace('--', '+')
             tokens = match.group().split('*')
             result = str_to_value(tokens[0], self.data)
             for i in range(1, len(tokens)):
@@ -270,18 +271,31 @@ class Parser:
                 expr = expr.replace(match.group(), str(result))
             if tmp != expr:
                 break
-        return expr
+        return expr.replace('--', '+')
+
+    def compute_modulo(self, expr):
+        re_mod = r"[\w\.\[\],;]+(%[+-]?[\w\.\[\],;]+)+"
+        match = re.search(re_mod, expr)
+        if match is None:
+            return expr
+        tokens = match.group().split('%')
+        x1 = str_to_value(tokens[0], self.data)
+        x2 = str_to_value(tokens[1], self.data)
+        result = do_operation(x1, x2, '%')
+        if isrealnumber(result):
+            return expr.replace(match.group(), '{:f}'.format(result))
+        return expr.replace(match.group(), str(result))
 
     def do_matrix_operation(self, expr):
-        rg = [r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
-              r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\-?[\w\.]+",
-              r"[\w\.]+(?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
-              r"\[[\w\.\[\],;\-\+]+\](?P<op>\.[a-z]+)",
-              r"\(\[[\w\.\[\],;\-\+]+\]\)(?P<op>\.[a-z]+)",
-              r"\([\di\.\-\+\*]+\)(?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
-              r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\([\di\.\-\+\*]+\)"]
-        for i in range(len(rg)):
-            match = re.search(rg[i], expr)
+        re_op = [r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
+                 r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\-?[\w\.]+",
+                 r"[\w\.]+(?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
+                 r"\[[\w\.\[\],;\-\+]+\](?P<op>\.[a-z]+)",
+                 r"\(\[[\w\.\[\],;\-\+]+\]\)(?P<op>\.[a-z]+)",
+                 r"\([\di\.\-\+\*]+\)(?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
+                 r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\([\di\.\-\+\*]+\)"]
+        for i in range(len(re_op)):
+            match = re.search(re_op[i], expr)
             if match is not None:
                 break
         if match is None:
@@ -307,24 +321,11 @@ class Parser:
         expr = expr.replace(match.group(), str(result))
         return expr
 
-    def do_modulo(self, expr):
-        regex = r"[\w\.\[\],;]+(%[+-]?[\w\.\[\],;]+)+"
-        match = re.search(regex, expr)
-        if match is None:
-            return expr
-        tokens = match.group().split('%')
-        x1 = str_to_value(tokens[0], self.data)
-        x2 = str_to_value(tokens[1], self.data)
-        result = do_operation(x1, x2, '%')
-        if isrealnumber(result):
-            return expr.replace(match.group(), '{:f}'.format(result))
-        return expr.replace(match.group(), str(result))
-
     def reduce(self, expr):
-        new_expr = self.do_division(expr).replace('--', '+')
-        new_expr = self.do_multiplication(new_expr).replace('--', '+')
+        new_expr = self.compute_division(expr).replace('--', '+')
+        new_expr = self.compute_multiplication(new_expr)
         new_expr = self.do_matrix_operation(new_expr)
-        new_expr = self.do_modulo(new_expr)
+        new_expr = self.compute_modulo(new_expr)
         if re.search(r"(([\d\.]+i?)|[^a-z]i)\.t", new_expr) or \
                 new_expr.startswith('i.t'):
             raise ValueError('transpose supported only by matrices')

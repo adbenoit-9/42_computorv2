@@ -1,16 +1,15 @@
 from parser import Parser
 from calculator import calculator
 from function import Function
+from utils import check_brackets
 import re
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 
-from utils import check_brackets
-
 
 def isfunction(expr):
-    regex = r"(?P<name>[a-z]+)\((?P<param>.*)\)"
-    match = re.fullmatch(regex, expr)
+    re_funct = r"(?P<name>[a-z]+)\((?P<param>.*)\)"
+    match = re.fullmatch(re_funct, expr)
     if match:
         if check_brackets(match.group('param')):
             return match.group('name'), match.group('param')

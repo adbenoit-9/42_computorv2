@@ -8,16 +8,12 @@ from conversion import str_to_value
 
 def do_operation(x1, x2, op):
     if isinstance(x1, str):
-        # if x1 in '.;,':
-        #     raise ValueError('syntax error')
         if isinstance(x2, int) and x2 == 0 and op in '*/':
             return 0
         if op == "*":
             return "{}{}{}".format(x2, op, x1)
         return "{}{}{}".format(x1, op, x2)
     if isinstance(x2, str):
-        # if x2 in '.;,':
-        #     raise ValueError('syntax error')
         if isinstance(x1, int) and x1 == 0 and op in '*/':
             return 0
         return "{}{}{}".format(x1, op, x2)

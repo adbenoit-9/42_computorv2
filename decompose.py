@@ -55,8 +55,8 @@ def op_to_str(x1, x2, op):
 def decompose(expr):
     expr = expr.replace(' ', '')
     expr = rm_useless_brackets(expr)
-    regex = r"\((?P<x>[\w\.\+\-\*\/]+)\)[\^](?P<pow>[\d\.]+)"
-    matches = re.finditer(regex, expr)
+    re_pow = r"\((?P<x>[\w\.\+\-\*\/]+)\)[\^](?P<pow>[\d\.]+)"
+    matches = re.finditer(re_pow, expr)
     for match in matches:
         new_expr = power_to_mul(match.group('x'), match.group('pow'))
         expr = expr.replace(match.group(), '({})'.format(new_expr))
