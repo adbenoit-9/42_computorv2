@@ -3,7 +3,7 @@ from utils import rm_useless_brackets
 
 
 def get_factored_expr(expr):
-    regex = [r"(?P<x1>[\w\.]+)[\*]\((?P<x2>[\w\.\+\-\*\/]+)\)",
+    regex = [r"(?P<x1>\-?[\w\.]+)[\*]\((?P<x2>[\w\.\+\-\*\/]+)\)",
              r"\((?P<x1>[\w\.\+\-\*\/]+)\)[\*](?P<x2>[\w\.]+)",
              r"\((?P<x1>[\w\.\+\-\*\/]+)\)[\*](?P<x2>\([\w\.\+\-\*\/]+\))",
              r"\((?P<x1>[\w\.\+\-\*\/]+)\)[/](?P<x2>[\w\.]+)"]
@@ -59,7 +59,7 @@ def decompose(expr):
     matches = re.finditer(regex, expr)
     for match in matches:
         new_expr = power_to_mul(match.group('x'), match.group('pow'))
-        expr = expr.replace(match.group(), new_expr)
+        expr = expr.replace(match.group(), '({})'.format(new_expr))
     match, tokens = get_factored_expr(expr)
     if match is None:
         return expr
@@ -68,7 +68,7 @@ def decompose(expr):
     tokens = [tokens[0], tokens[2]]
     for i in range(2):
         if tokens[i] == '1':
-            expr = expr.replace(match, tokens[1 - i])
+            expr = expr.replace(match, '({})'.format(tokens[1 - i]))
             return decompose(expr)
     for i in range(len(tokens)):
         if '(' not in tokens[i]:

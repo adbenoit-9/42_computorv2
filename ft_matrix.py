@@ -111,7 +111,10 @@ term-to-term multiplication between matrix of differents dimensions""")
         for i, row in enumerate(self.values):
             ret += '['
             for j, val in enumerate(row):
-                ret += ' {} '.format(val)
+                if isinstance(val, float):
+                    ret += ' {} '.format(val)
+                else:
+                    ret += ' {} '.format(round(val, 4))
                 if j != self.shape[1] - 1:
                     ret += ','
             if i != self.shape[0] - 1:
@@ -125,7 +128,10 @@ term-to-term multiplication between matrix of differents dimensions""")
         for i, row in enumerate(self.values):
             ret += '['
             for j, val in enumerate(row):
-                ret += '{}'.format(val)
+                if isinstance(val, float):
+                    ret += '{}'.format(val)
+                else:
+                    ret += '{}'.format(round(val, 4))
                 if j != self.shape[1] - 1:
                     ret += ','
             if i != self.shape[0] - 1:

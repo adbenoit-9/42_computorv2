@@ -70,5 +70,6 @@ def str_to_value(x, data):
         if x.is_integer():
             return int(x)
         return x
+        # return round(x, 4)
     except Exception:
         return x

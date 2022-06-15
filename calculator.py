@@ -1,5 +1,6 @@
 import re
-from ft_matrix import Matrix
+# from ft_matrix import Matrix
+from ft_complex import Complex
 from decompose import decompose
 from utils import isrealnumber
 from ft_math import ft_abs
@@ -42,6 +43,10 @@ def do_operation(x1, x2, op):
     except TypeError:
         raise ValueError("operator '{}' not supported between '{}' and '{}'."
                          .format(op, type(x1).__name__, type(x2).__name__))
+    if isinstance(result, Complex) and result.im == 0:
+        result = result.real
+    if isinstance(result, float):
+        result = round(result, 4)
     return result
 
 

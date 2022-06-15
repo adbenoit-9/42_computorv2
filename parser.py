@@ -34,8 +34,16 @@ class Parser:
             match = re.search(regex, cmd)
         regex = r"[^\w\_\+\-\*\/\(\)\[\];,\.\%\^=\?]"
         match = re.search(regex, cmd)
-        if match is not None:
+        if match:
             raise ValueError('illegal character: {}'.format(match.group()))
+        regex = r"[\*\/\%\^\+\-=\.\(\)\[;,]\."
+        if re.search(regex, cmd):
+            raise ValueError('syntax error')
+        regex1 = r"\[\[.*\](;\[.*\])+\]"
+        regex2 = r"\[.*(,.*)+\]"
+        if (cmd.find(';') != -1 and re.search(regex1, cmd) is None) or \
+                (cmd.find(',') != -1 and re.search(regex2, cmd) is None):
+            raise ValueError('syntax error')
         i = cmd.count('(') - cmd.count(')')
         j = cmd.count('[') - cmd.count(']')
         if i != 0 or j != 0:
@@ -57,20 +65,19 @@ class Parser:
         expr = expr.replace(' ', '')
         expr = self.replace_var(expr)
         expr = self.put_mul(expr)
+        expr = self.replace_funct(expr)
         expr = self.put_pow(expr)
         expr = self.calculate_pow(expr).replace('-+', '-')
+        expr = expr.replace('+-', '-')
         expr = rm_useless_brackets(expr)
         expr = self.reduce(expr)
         return expr
 
     def end(self, result):
         result = str(result)
-        if result[-1] in "*/+-%^" or result in ';.,':
+        if result[-1] in "*/+-%^":
             raise ValueError('syntax error')
         tmp = str_to_matrix(result, self.data)
-        if tmp is not None:
-            return tmp.__repr__()
-        tmp = str_to_complex(result)
         if tmp is not None:
             return tmp.__repr__()
         result = result.replace(' ', '')
@@ -121,6 +128,7 @@ class Parser:
 
     def put_mul(self, expr):
         expr = expr.replace(')(', ')*(')
+        expr = expr.replace('-(', '-1*(')
         regex = r"(?P<x1>[\d]+)(?P<x2>([a-z]+))"
         match = re.search(regex, expr)
         if match is None:
@@ -135,14 +143,16 @@ class Parser:
     def replace_var(self, expr):
         matches = re.finditer(r"[a-z]+", expr)
         new_expr = expr
+        i = 0
         for elem in matches:
             var = elem.group()
             name = var
             if name in self.data.keys():
                 value = self.data[name]
                 if isinstance(value, Function) is False:
-                    new_expr = new_expr[:elem.span()[0]] + "({})".format(str(value))\
-                               + new_expr[elem.span()[1]:]
+                    new_expr = new_expr[:elem.span()[0] + i] + "({})".format(str(value))\
+                               + new_expr[elem.span()[1] + i:]
+                    i += len(str(value)) + 2 - len(elem.group())
         return new_expr
 
     def calculate_pow(self, expr):
@@ -158,7 +168,7 @@ class Parser:
             else:
                 x = do_operation(x1, x2, '^')
             if (isrealnumber(x) is False or x > 0) and \
-                    (start == 0 or new_expr[start - 1] not in '*/%^'):
+                    (start == 0 or new_expr[start - 1] not in '*/%^-+'):
                 new_expr = '{}+{}{}'.format(new_expr[:start], x,
                                             new_expr[end:])
             else:
@@ -221,6 +231,8 @@ class Parser:
                                        expr[match.span()[0] - 1] == '/'):
             tmp = self.do_division(expr[match.span()[1]:])
             return expr[:match.span()[1]] + tmp
+        if isrealnumber(result):
+            return expr[:match.span()[0]] + '{:f}'.format(result) + expr[match.span()[1]:]
         return expr[:match.span()[0]] + str(result) + expr[match.span()[1]:]
 
     def do_multiplication(self, expr):
@@ -243,7 +255,10 @@ class Parser:
                             raise ValueError('syntax error')
                         raise ValueError('multiple unknowns not supported')
             tmp = expr
-            expr = expr.replace(match.group(), str(result))
+            if isrealnumber(result):
+                expr = expr.replace(match.group(), '{:f}'.format(result))
+            else:
+                expr = expr.replace(match.group(), str(result))
             if tmp != expr:
                 break
         return expr
@@ -290,13 +305,18 @@ class Parser:
         x1 = str_to_value(tokens[0], self.data)
         x2 = str_to_value(tokens[1], self.data)
         result = do_operation(x1, x2, '%')
+        if isrealnumber(result):
+            return expr.replace(match.group(), '{:f}'.format(result))
         return expr.replace(match.group(), str(result))
 
     def reduce(self, expr):
         new_expr = self.do_division(expr).replace('--', '+')
         new_expr = self.do_multiplication(new_expr).replace('--', '+')
-        new_expr = self.do_matrix_operation(new_expr).replace('--', '+')
-        new_expr = self.do_modulo(new_expr).replace('--', '+')
+        new_expr = self.do_matrix_operation(new_expr)
+        new_expr = self.do_modulo(new_expr)
+        if re.search(r"(([\d\.]+i?)|[^a-z]i)\.t", new_expr) or \
+                new_expr.startswith('i.t'):
+            raise ValueError('transpose supported only by matrices')
         if new_expr[0] == "+":
             new_expr = new_expr[1:]
         if new_expr == expr:
