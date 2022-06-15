@@ -98,8 +98,8 @@ def put_space(expr):
     matches = re.finditer(r"[^\(\[;,][^\w\^\.\(\)\[\],;\|]+", expr)
     i = 0
     for elem in matches:
-        expr = expr[:elem.span()[0] + i + 1] + " {} ".format(elem.group()[1:]) \
-               + expr[elem.span()[1] + i:]
+        expr = expr[:elem.span()[0] + i + 1] + \
+                " {} ".format(elem.group()[1:]) + expr[elem.span()[1] + i:]
         i += 2
     return expr.strip()
 

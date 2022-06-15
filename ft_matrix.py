@@ -45,7 +45,7 @@ class Matrix:
         if isinstance(v, Matrix) is False:
             raise TypeError("addition not supported.")
         if self.shape != v.shape:
-            raise ValueError("addition between matrix of differents dimensions")
+            raise ValueError("addition between matrices of differents dimensions")
         res = self.copy()
         for i, row in enumerate(v.values):
             for j, val in enumerate(row):
@@ -59,7 +59,7 @@ class Matrix:
         if isinstance(v, Matrix) is False:
             raise TypeError("substration not supported.")
         if self.shape != v.shape:
-            raise ValueError("subtraction between matrix of differents dimensions")
+            raise ValueError("subtraction between matrices of differents dimensions")
         res = self.copy()
         for i, row in enumerate(v.values):
             for j, val in enumerate(row):
@@ -75,14 +75,14 @@ class Matrix:
         if isinstance(n, Matrix):
             if self.shape != n.shape:
                 raise ValueError("""
-term-to-term multiplication between matrix of differents dimensions""")
+term-to-term multiplication between matrices of differents dimensions""")
             res = self.copy()
             for i, row in enumerate(self.values):
                 for j, val in enumerate(row):
                     res.values[i][j] *= n.values[i][j]
             return res
         if isrealnumber(n) is False:
-            raise TypeError("A Matrix can be multiplied only by scalar")
+            raise TypeError("matrix can be multiplied only by scalar")
         res = self.copy()
         for i, row in enumerate(res.values):
             for j, val in enumerate(row):
@@ -94,7 +94,7 @@ term-to-term multiplication between matrix of differents dimensions""")
 
     def __truediv__(self, n):
         if isrealnumber(n) is False:
-            raise TypeError("A Matrix can be divided only by scalar")
+            raise TypeError("matrix can be divided only by scalar")
         if n == 0:
             raise ValueError("Division by 0")
         res = self.copy()
@@ -104,7 +104,7 @@ term-to-term multiplication between matrix of differents dimensions""")
         return res
 
     def __rtruediv__(self, n):
-        raise TypeError("A scalar cannot be divided by a Matrix.")
+        raise TypeError("scalar cannot be divided by a Matrix")
 
     def __repr__(self):
         ret = ""
@@ -174,7 +174,7 @@ term-to-term multiplication between matrix of differents dimensions""")
             raise TypeError("Matrix product with '{}' not supported"
                             .format(type(other).__name__))
         if self.shape[1] != other.shape[0]:
-            raise ValueError("product not supported between matrix of dimensions {} and {}."
+            raise ValueError("product not supported between matrices of dimensions {} and {}."
                              .format(self.shape, other.shape))
         prod = []
         for i in range(self.shape[0]):

@@ -1,6 +1,5 @@
 from parser import Parser
 from calculator import calculator
-from ft_matrix import Matrix
 from function import Function
 import re
 from prompt_toolkit import PromptSession

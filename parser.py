@@ -2,8 +2,9 @@ from ft_math import ft_abs, ft_sqrt
 from function import Function
 from ft_matrix import Matrix
 from ft_complex import Complex, isrealnumber
-from conversion import str_to_complex, str_to_matrix, str_to_value
-from utils import check_brackets, isnumber, rm_useless_brackets, put_space, extract_function
+from conversion import str_to_matrix, str_to_value
+from utils import check_brackets, isnumber, rm_useless_brackets, \
+                  put_space, extract_function
 import re
 import math
 from calculator import calculator, do_operation
@@ -18,7 +19,8 @@ class Parser:
                              .format(type(cmd).__name__))
         if data is None:
             data = {}
-        if re.search(r"\(\)", cmd) or re.search(r"[\/\%]{2}", cmd) or re.search(r"(\*[\/%])|([\/%]\*)|\*{3}", cmd):
+        if re.search(r"\(\)", cmd) or re.search(r"[\/\%]{2}", cmd) or \
+                re.search(r"(\*[\/%])|([\/%]\*)|\*{3}", cmd):
             raise ValueError('syntax error')
         self.data = data
         tokens = cmd.lower().split()
@@ -49,7 +51,8 @@ class Parser:
         if check_brackets(cmd) is False:
             raise ValueError('syntax error')
         self.cmd = cmd.lower().split('=')
-        if len(self.cmd) != 2 or len(self.cmd[1]) == 0 or len(self.cmd[0]) == 0:
+        if len(self.cmd) != 2 or len(self.cmd[1]) == 0 or \
+                len(self.cmd[0]) == 0:
             raise ValueError('syntax error')
         for i in range(len(self.cmd)):
             self.cmd[i] = self.cmd[i].strip()
@@ -154,8 +157,9 @@ class Parser:
             if name in self.data.keys():
                 value = self.data[name]
                 if isinstance(value, Function) is False:
-                    new_expr = new_expr[:elem.span()[0] + i] + "({})".format(str(value))\
-                               + new_expr[elem.span()[1] + i:]
+                    new_expr = new_expr[:elem.span()[0] + i] + \
+                               "({})".format(str(value)) + \
+                               new_expr[elem.span()[1] + i:]
                     i += len(str(value)) + 2 - len(elem.group())
         return new_expr
 
@@ -236,7 +240,8 @@ class Parser:
             tmp = self.do_division(expr[match.span()[1]:])
             return expr[:match.span()[1]] + tmp
         if isrealnumber(result):
-            return expr[:match.span()[0]] + '{:f}'.format(result) + expr[match.span()[1]:]
+            return expr[:match.span()[0]] + '{:f}'.format(result) + \
+                   expr[match.span()[1]:]
         return expr[:match.span()[0]] + str(result) + expr[match.span()[1]:]
 
     def do_multiplication(self, expr):
