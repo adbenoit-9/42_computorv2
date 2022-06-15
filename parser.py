@@ -132,9 +132,9 @@ class Parser:
     def put_mul(self, expr):
         expr = expr.replace(')(', ')*(')
         expr = expr.replace('-(', '-1*(')
-        regex = [r"(?P<x1>[\d\.]+)(?P<x2>([a-su-z]|[a-z]{2,}))",
+        regex = [r"(?P<x1>\d+\.?\d*)(?P<x2>([a-su-z]|[a-z]{2,}))",
                  r"(?P<x1>[a-z])(?P<x2>[\d\.]+)",
-                 r"(?P<x1>[\d\.]+)(?P<x2>\()",
+                 r"(?P<x1>\d+\.?\d*)(?P<x2>\()",
                  r"(?P<x1>\))(?P<x2>[\d\.]+)"]
         match = None
         for i in range(len(regex)):
@@ -262,7 +262,7 @@ class Parser:
                     if isinstance(x2, str):
                         if x2 in '.;,':
                             raise ValueError('syntax error')
-                        raise ValueError('multiple unknowns not supported')
+                        raise ValueError('multiple variables not supported')
             tmp = expr
             if isrealnumber(result):
                 expr = expr.replace(match.group(), '{:f}'.format(result))
@@ -276,8 +276,8 @@ class Parser:
         rg = [r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
               r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\-?[\w\.]+",
               r"[\w\.]+(?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
-              r"\[[\w\.\[\],;\-\+]+\](?P<op>\.t)",
-              r"\(\[[\w\.\[\],;\-\+]+\]\)(?P<op>\.t)",
+              r"\[[\w\.\[\],;\-\+]+\](?P<op>\.[a-z]+)",
+              r"\(\[[\w\.\[\],;\-\+]+\]\)(?P<op>\.[a-z]+)",
               r"\([\di\.\-\+\*]+\)(?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
               r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\([\di\.\-\+\*]+\)"]
         for i in range(len(rg)):
@@ -298,6 +298,8 @@ class Parser:
                 result = result.T()
             else:
                 raise ValueError('transpose supported only by matrices')
+        elif op.startswith('.'):
+            raise ValueError('syntax error')
         else:
             for i in range(1, len(tokens)):
                 x = str_to_value(tokens[i], self.data)

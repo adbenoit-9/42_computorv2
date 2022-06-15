@@ -29,9 +29,9 @@ class Polynomial:
         if ret is True:
             b = int(b / k)
             denom = int(denom / k)
-            if denom != 1 and b != 0:
+            if ft_abs(denom) != 1 and b != 0:
                 print(form2.format(unknown=self.unknown, num=b, denom=denom))
-        elif denom != 1 and b != 0:
+        elif ft_abs(denom) != 1 and b != 0:
             print(form2.format(unknown=self.unknown, num=b, denom=denom))
         result = b / denom
         if result.is_integer():
@@ -62,7 +62,7 @@ class Polynomial:
             if ret is True:
                 num = int(num / k)
                 denom = int(denom / k)
-            if denom != 1 and num != 0 and isinstance(num, int):
+            if ft_abs(denom) != 1 and num != 0 and isinstance(num, int):
                 print(form4.format(**data, num=num, denom=denom))
             result = num / denom
             if result.is_integer():
@@ -133,9 +133,9 @@ class Polynomial:
             if ret is True:
                 b = int(b / k)
                 denom = int(denom / k)
-                if denom != 1 and b != 0:
+                if ft_abs(denom) != 1 and b != 0:
                     print("{} = {} / {}".format(self.unknown, b, denom))
-            elif denom != 1 and b != 0:
+            elif ft_abs(denom) != 1 and b != 0:
                 print("{} = {} / {}".format(self.unknown, b, denom))
             if isinstance(x, float) and x.is_integer():
                 x = int(x)
