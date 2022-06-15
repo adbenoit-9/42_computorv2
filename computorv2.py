@@ -6,15 +6,16 @@ import re
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 
+from utils import check_brackets
+
 
 def isfunction(expr):
-    index = expr.find('(')
-    if index == -1:
-        return expr, None
-    end = expr.find(')')
-    if end == -1 or end == index + 1:
-        raise ValueError('syntax error')
-    return expr[:index], expr[index + 1:end]
+    regex = r"(?P<name>[a-z]+)\((?P<param>.*)\)"
+    match = re.fullmatch(regex, expr)
+    if match:
+        if check_brackets(match.group('param')):
+            return match.group('name'), match.group('param')
+    return expr, None
 
 
 def data_to_str(data):
@@ -30,6 +31,9 @@ def data_to_str(data):
 
 
 def resolve(name, x, y, parser):
+    if name is None:
+        print('syntax error')
+        return
     if name not in parser.data.keys():
         raise ValueError("function '{}' undefined".format(name))
     expr = str(parser.data[name].image(x))

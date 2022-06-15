@@ -102,3 +102,22 @@ def put_space(expr):
                + expr[elem.span()[1] + i:]
         i += 2
     return expr.strip()
+
+
+def check_brackets(expr):
+    i = 0
+    j = 0
+    for c in expr:
+        if c == '(':
+            i += 1
+        elif c == ')':
+            i -= 1
+        elif c == '[':
+            j += 1
+        elif c == ']':
+            j -= 1
+        if i < 0 or j < 0:
+            return False
+    if i != 0 or j != 0:
+        return False
+    return True

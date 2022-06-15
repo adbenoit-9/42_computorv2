@@ -3,7 +3,7 @@ from function import Function
 from ft_matrix import Matrix
 from ft_complex import Complex, isrealnumber
 from conversion import str_to_complex, str_to_matrix, str_to_value
-from utils import isnumber, rm_useless_brackets, put_space, extract_function
+from utils import check_brackets, isnumber, rm_useless_brackets, put_space, extract_function
 import re
 import math
 from calculator import calculator, do_operation
@@ -46,7 +46,7 @@ class Parser:
             raise ValueError('syntax error')
         i = cmd.count('(') - cmd.count(')')
         j = cmd.count('[') - cmd.count(']')
-        if i != 0 or j != 0:
+        if check_brackets(cmd) is False:
             raise ValueError('syntax error')
         self.cmd = cmd.lower().split('=')
         if len(self.cmd) != 2 or len(self.cmd[1]) == 0 or len(self.cmd[0]) == 0:
