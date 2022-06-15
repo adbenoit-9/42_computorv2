@@ -129,13 +129,17 @@ class Parser:
     def put_mul(self, expr):
         expr = expr.replace(')(', ')*(')
         expr = expr.replace('-(', '-1*(')
-        regex = r"(?P<x1>[\d]+)(?P<x2>([a-z]+))"
-        match = re.search(regex, expr)
+        regex = [r"(?P<x1>[\d\.]+)(?P<x2>([a-su-z]|[a-z]{2,}))",
+                 r"(?P<x1>[a-z])(?P<x2>[\d\.]+)",
+                 r"(?P<x1>[\d\.]+)(?P<x2>\()",
+                 r"(?P<x1>\))(?P<x2>[\d\.]+)"]
+        match = None
+        for i in range(len(regex)):
+            match = re.search(regex[i], expr)
+            if match:
+                break
         if match is None:
-            regex = r"(?P<x1>[a-z]+)(?P<x2>[\d]+)"
-            match = re.search(regex, expr)
-            if match is None:
-                return expr
+            return expr
         expr = expr.replace(match.group(), "{}*{}"
                             .format(match.group('x1'), match.group('x2')))
         return self.put_mul(expr)

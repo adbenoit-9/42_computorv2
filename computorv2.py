@@ -55,7 +55,7 @@ def cli(data, cmd):
     else:
         if name.isalpha() is False:
             raise ValueError('illegal {} name: {}'.format(type_, name))
-        if name in ['i', 'cos', 'sin', 'tan', 'abs', 'sqrt', 'exp']:
+        if name in ['i', 'cos', 'sin', 'tan', 'abs', 'sqrt', 'exp', 't']:
             raise ValueError('illegal {} name: {}'.format(type_, name))
         if type_ == 'variable':
             data[name] = calculator(cmd[1], parser)
