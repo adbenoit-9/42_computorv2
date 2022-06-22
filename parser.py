@@ -1,3 +1,4 @@
+from random import expovariate
 from ft_math import ft_abs, ft_sqrt
 from function import Function
 from ft_matrix import Matrix
@@ -150,9 +151,9 @@ class Parser:
         expr = expr.replace(')(', ')*(')
         expr = expr.replace('-(', '-1*(')
         regex = [r"(?P<x1>\d+\.?\d*)(?P<x2>([a-su-z]|[a-z]{2,}))",
-                 r"(?P<x1>[a-z])(?P<x2>[\d\.]+)",
+                 r"(?P<x1>[a-z])(?P<x2>\d+\.?\d*)",
                  r"(?P<x1>\d+\.?\d*)(?P<x2>\()",
-                 r"(?P<x1>\))(?P<x2>[\d\.]+)"]
+                 r"(?P<x1>\))(?P<x2>\d+\.?\d*)"]
         match = None
         for i in range(len(regex)):
             match = re.search(regex[i], expr)

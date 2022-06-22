@@ -19,6 +19,7 @@ def isfunction(expr):
 def data_to_str(data):
     ret = ""
     for i, key in enumerate(data.keys()):
+
         if isinstance(data[key], Function) is False:
             if i != 0:
                 ret += '\n'

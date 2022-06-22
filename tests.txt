@@ -148,4 +148,5 @@ l = .
 1+ io = ?
  1+ i = ?  
 f(x)  = (6+8)*x+x^2/5 
+sklfn. + 6 =?
  show    data  
