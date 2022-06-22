@@ -25,6 +25,8 @@ class Parser:
         if len(tokens) == 2 and tokens[0] == "show" and tokens[1] == "data":
             self.cmd = [tokens[0] + ' ' + tokens[1]]
             return
+        if self.check_space(tokens) == False:
+            raise ValueError('syntax error')
         cmd = cmd.replace(' ', '')
         re_abs = r"\|.+\|"
         match = re.search(re_abs, cmd)
@@ -67,13 +69,25 @@ class Parser:
         return self.brackets_syntax(cmd)
 
     def brackets_syntax(self, expr):
-        matches = re.finditer(r"(\(.*\))|(\[.*\])", expr)
+        matches = list(re.finditer(r"(\([^\(\)\[\]]*\))|(\[[^\(\)\[\]]*\])", expr))
+        if re.search(r"[\(\)\[\]]", expr) and len(matches) == 0:
+            return False
         for match in matches:
-            if check_brackets(match.group(), False) is False:
-                return False
             if re.search(r"[\(\)\[\]]", match.group()):
-                if self.brackets_syntax(match.group()[1:-1]) is False:
+                if self.brackets_syntax(expr.replace(match.group(),
+                                        match.group()[1:-1])) is False:
                     return False
+        return True
+
+    def check_space(self, tokens):
+        space = True
+        for token in tokens:
+            if token[-1] in "[]()-+/*=%^,;":
+                space = True
+            elif space == False and token[0] not in "[]()-+/*=%^,;?":
+                return False
+            else:
+                space = False
         return True
 
     def start(self, expr):

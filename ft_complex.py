@@ -172,7 +172,7 @@ class Complex:
         im = round(self.im, 4)
         real = round(self.real, 4)
         if self.real != 0:
-            s += "{}".format(ft_abs(real))
+            s += "{}".format(real)
         if self.im > 0 and self.real:
             s += '+'
         if self.im < 0:
