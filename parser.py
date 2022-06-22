@@ -76,8 +76,6 @@ class Parser:
                     return False
         return True
 
-
-
     def start(self, expr):
         if isinstance(expr, str) is False:
             raise ValueError('Parser: invalid argument')
