@@ -5,7 +5,7 @@ from utils import check_brackets
 import re
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
-
+import sys
 
 def isfunction(expr):
     re_funct = r"(?P<name>[a-z]+)\((?P<param>.*)\)"

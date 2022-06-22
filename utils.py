@@ -104,7 +104,7 @@ def put_space(expr):
     return expr.strip()
 
 
-def check_brackets(expr):
+def check_brackets(expr, option=True):
     i = 0
     j = 0
     for c in expr:
@@ -116,7 +116,7 @@ def check_brackets(expr):
             j += 1
         elif c == ']':
             j -= 1
-        if i < 0 or j < 0:
+        if i < 0 or j < 0 and option:
             return False
     if i != 0 or j != 0:
         return False

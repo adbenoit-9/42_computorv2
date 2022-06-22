@@ -1,6 +1,6 @@
 from parse_polynomial import parse_polynomial
 from ft_math import pgcd, ft_sqrt, ft_abs
-
+import sys
 
 class Polynomial:
     def __init__(self, polynomial, unknown='x') -> None:

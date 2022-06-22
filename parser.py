@@ -46,7 +46,7 @@ class Parser:
                     raise ValueError('syntax error')
 
     def command_syntax(self, cmd):
-        if re.search(r"\(\)", cmd) or re.search(r"[\/\%]{2}", cmd) or \
+        if re.search(r"\(\)", cmd) or re.search(r"[\^\/\%]{2}", cmd) or \
                 re.search(r"(\*[\/%])|([\/%]\*)|\*{3}", cmd) or \
                 re.search(r"(\([\*\/%\^])|([\^\*\/%]\))", cmd):
             return False
@@ -64,7 +64,19 @@ class Parser:
             return False
         if check_brackets(cmd) is False:
             return False
+        return self.brackets_syntax(cmd)
+
+    def brackets_syntax(self, expr):
+        matches = re.finditer(r"(\(.*\))|(\[.*\])", expr)
+        for match in matches:
+            if check_brackets(match.group(), False) is False:
+                return False
+            if re.search(r"[\(\)\[\]]", match.group()):
+                if self.brackets_syntax(match.group()[1:-1]) is False:
+                    return False
         return True
+
+
 
     def start(self, expr):
         if isinstance(expr, str) is False:

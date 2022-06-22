@@ -2,6 +2,7 @@ from ft_complex import Complex
 from polynomial import Polynomial
 from utils import put_space, rm_useless_brackets
 import re
+import sys
 
 
 class Function:
