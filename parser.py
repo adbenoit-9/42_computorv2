@@ -47,7 +47,8 @@ class Parser:
 
     def command_syntax(self, cmd):
         if re.search(r"\(\)", cmd) or re.search(r"[\/\%]{2}", cmd) or \
-                re.search(r"(\*[\/%])|([\/%]\*)|\*{3}", cmd):
+                re.search(r"(\*[\/%])|([\/%]\*)|\*{3}", cmd) or \
+                re.search(r"(\([\*\/%\^])|([\^\*\/%]\))", cmd):
             return False
         re_illegal_char = r"[^\w\_\+\-\*\/\(\)\[\];,\.\%\^=\?]"
         match = re.search(re_illegal_char, cmd)
