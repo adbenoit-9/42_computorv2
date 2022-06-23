@@ -1,7 +1,8 @@
 import re
 from ft_complex import Complex
+from ft_matrix import Matrix
 from decompose import decompose
-from utils import isrealnumber
+from utils import isrealnumber, get_unknown_var
 from ft_math import ft_abs
 from conversion import str_to_value
 
@@ -32,6 +33,9 @@ def do_operation(x1, x2, op):
         elif op == '^':
             result = x1 ** x2
         elif op == '**':
+            if isinstance(x1, Matrix) is False:
+                raise TypeError("Matrix product with '{}' not supported"
+                            .format(type(x1).__name__))
             result = x1.dot(x2)
         else:
             raise ValueError("operator '{}' not supported.".format(op))
@@ -99,6 +103,8 @@ def calculator(expr, parser, option=0):
     expr = parser.start(expr)
     tmp = expr
     match = re.search(r"\([^\(\)]+\)", expr)
+    if len(get_unknown_var(expr)) == 0:
+        option = 0
     while match is not None:
         new_expr = do_sum(match.group()[1:-1])
         expr = expr.replace(match.group(), "({})".format(new_expr))

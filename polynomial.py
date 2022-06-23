@@ -70,36 +70,48 @@ class Polynomial:
             print(form5.format(**data, result=result))
 
     def negative_delta_step(self, delta):
-        form3 = "{unknown}{k} = {b} / {d1} {sign} i * sqrt({delta}) / {d2}"
-        form4 = "{unknown}{k} = {b} / {d1} {sign} i * {sqrt_delta} / {d2}"
+        form = "{unknown}{k} = {part1}{sign}{part2}"
         for i in range(2):
             data = {
                 'k': i + 1,
                 'b': -self.coefs[1],
-                'sign': '-' if i == 0 else '+',
-                'delta': -delta,
-                'sqrt_delta': ft_sqrt(-delta),
-                'a': self.coefs[2],
+                'sign': "",
                 'denom': 2 * self.coefs[2],
                 'unknown': self.unknown
             }
+            sqrt_delta = ft_sqrt(delta)
             ret, k = pgcd(data['b'], data['denom'])
             d1 = data['denom']
             d2 = data['denom']
+            p1 = ""
+            p2 = ""
             if ret is True:
                 data['b'] /= k
                 data['b'] = int(data['b'])
                 d1 /= k
                 d1 = int(d1)
-            ret2, k2 = pgcd(data['sqrt_delta'], data['denom'])
+            if data['b'] != 0:
+                p1 += str(data['b'])
+                if d1 != 1:
+                    p1 += " / {}".format(d1)
+            ret2, k2 = pgcd(sqrt_delta.im, data['denom'])
             if ret2 is True:
-                data['sqrt_delta'] /= k2
-                data['sqrt_delta'] = int(data['sqrt_delta'])
+                sqrt_delta /= k2
                 d2 /= k2
                 d2 = int(d2)
-                print(form4.format(**data, d1=d1, d2=d2))
+            if isinstance(sqrt_delta.im, float) and sqrt_delta.im.is_integer():
+                p2 += str(sqrt_delta)
             else:
-                print(form3.format(**data, d1=d1, d2=d2))
+                p2 += "i * sqrt({})".format(-delta)
+            if d2 != 1:
+                p2 += " / {}".format(d2)
+            if len(p1) and i:
+                data['sign'] = " + "
+            elif len(p1) and i == 0:
+                data['sign'] = " - "
+            elif i == 0:
+                data['sign'] = '-'
+            print(form.format(**data, part1=p1, part2=p2))
 
     def show_step(self, delta):
         if isinstance(delta, float) and delta.is_integer():

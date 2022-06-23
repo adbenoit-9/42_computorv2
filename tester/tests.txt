@@ -152,12 +152,11 @@ sklfn. + 6 =?
 4(*)4 = ?
 ([3)[1,2]] =?
 f(q) = 2*(q*(2*(4+5)))
- show    data  
 3      4   = ?
 so / lol = ?
 sqrt(-1) = ?
-h(x) = x^2 + 1                                                                                                                            
-h(x) = 0 ?
+h(xx) = xx^2 + 1                                                                                                                            
+h(xx) = 0 ?
 2 ** matA = ?
-x =2i
 f(x) = 2*(x + 3*(x - 4))
+ show    data  

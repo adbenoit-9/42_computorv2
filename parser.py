@@ -1,13 +1,12 @@
-from random import expovariate
+import re
+import math
 from ft_math import ft_abs, ft_sqrt
 from function import Function
 from ft_matrix import Matrix
 from ft_complex import Complex, isrealnumber
 from conversion import str_to_matrix, str_to_value
-from utils import check_brackets, isnumber, rm_useless_brackets, \
+from utils import check_brackets, get_unknown_var, isnumber, rm_useless_brackets, \
                   put_space, extract_function
-import re
-import math
 from calculator import calculator, do_operation
 
 
@@ -107,6 +106,9 @@ class Parser:
         result = str(result)
         if result[-1] in "*/+-%^":
             raise ValueError('syntax error')
+        matches = re.finditer(r"[a-z]+", result)
+        if len(get_unknown_var(result)) > 1:
+            raise ValueError('multiple variables not supported')
         tmp = str_to_matrix(result, self.data)
         if tmp is not None:
             return tmp.__repr__()

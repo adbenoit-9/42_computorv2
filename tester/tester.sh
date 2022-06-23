@@ -1,6 +1,5 @@
-cat tests.txt | python3 ../computorv2.py > tmp.txt 2> /dev/null
-sed 's/.*>/>/g' tmp.txt > tests_out.txt
-rm tmp.txt
+rm diff.txt 2> /dev/null
+cat tests.txt | python3 ../computorv2.py > tests_out.txt 2> /dev/null
 diff tests_out.txt output.txt > diff.txt
 if [ $? -eq 0 ]
 then

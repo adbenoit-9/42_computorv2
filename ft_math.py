@@ -1,10 +1,17 @@
+from ft_complex import Complex
+
+
 def ft_sqrt(n):
+    iscomplex = False
     if n < 0:
-        return None
+        iscomplex = True
+        n *= -1
     sqrt = n / 2.
     while sqrt * sqrt < n:
         sqrt += 1.
     if sqrt * sqrt == n:
+        if iscomplex:
+            return Complex(0, sqrt)
         return sqrt
     sqrt -= 1.
     tmp = 0.
@@ -12,7 +19,9 @@ def ft_sqrt(n):
         tmp = sqrt
         sqrt = (n / tmp + tmp) / 2
     if sqrt.is_integer():
-        return int(sqrt)
+        sqrt = int(sqrt)
+    if iscomplex:
+        return Complex(0, sqrt)
     return sqrt
 
 
