@@ -30,7 +30,10 @@ def do_operation(x1, x2, op):
         elif op == '-':
             result = x1 - x2
         elif op == '*':
-            result = x1 * x2
+            if isinstance(x2, Matrix):
+                result = x2 * x1
+            else:
+                result = x1 * x2
         elif op == '/':
             result = x1 / x2
         elif op == '%':

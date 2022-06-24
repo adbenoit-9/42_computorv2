@@ -1,5 +1,5 @@
 from utils import isrealnumber, isnumber
-
+from ft_complex import Complex
 
 class Matrix:
     def __init__(self, *args):
@@ -81,7 +81,7 @@ term-to-term multiplication between matrices of differents dimensions""")
                 for j, val in enumerate(row):
                     res.values[i][j] *= n.values[i][j]
             return res
-        if isrealnumber(n) is False:
+        if isnumber(n) is False:
             raise TypeError("matrix can be multiplied only by scalar")
         res = self.copy()
         for i, row in enumerate(res.values):
@@ -112,9 +112,11 @@ term-to-term multiplication between matrices of differents dimensions""")
             ret += '['
             for j, val in enumerate(row):
                 if isinstance(val, float):
-                    ret += ' {} '.format(val)
-                else:
                     ret += ' {} '.format(round(val, 4))
+                elif isinstance(val, Complex):
+                    ret += ' {} '.format(repr(val))
+                else:
+                    ret += ' {} '.format(val)
                 if j != self.shape[1] - 1:
                     ret += ','
             if i != self.shape[0] - 1:
@@ -129,9 +131,11 @@ term-to-term multiplication between matrices of differents dimensions""")
             ret += '['
             for j, val in enumerate(row):
                 if isinstance(val, float):
-                    ret += '{}'.format(val)
-                else:
                     ret += '{}'.format(round(val, 4))
+                elif isinstance(val, Complex):
+                    ret += repr(val)
+                else:
+                    ret += '{}'.format(val)
                 if j != self.shape[1] - 1:
                     ret += ','
             if i != self.shape[0] - 1:
