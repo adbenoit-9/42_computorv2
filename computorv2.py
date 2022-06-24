@@ -1,6 +1,8 @@
 from parser import Parser
 from calculator import calculator
+from conversion import str_to_complex, str_to_value
 from function import Function
+from ft_complex import Complex
 from utils import check_brackets
 import re
 from prompt_toolkit import PromptSession
@@ -19,11 +21,13 @@ def isfunction(expr):
 def data_to_str(data):
     ret = ""
     for i, key in enumerate(data.keys()):
-
         if isinstance(data[key], Function) is False:
             if i != 0:
                 ret += '\n'
-            ret += "{}: {}".format(key, data[key])
+            if isinstance(data[key], Complex):
+                ret += "{}: {}".format(key, repr(data[key]))
+            else:
+                ret += "{}: {}".format(key, data[key])
     if len(ret) == 0:
         return None
     return ret
@@ -61,13 +65,14 @@ def cli(data, cmd):
         if name in ['i', 'cos', 'sin', 'tan', 'abs', 'sqrt', 'exp', 't']:
             raise ValueError('illegal {} name: {}'.format(type_, name))
         if type_ == 'variable':
-            data[name] = calculator(cmd[1], parser)
+            result = calculator(cmd[1], parser)
             regex = r"[a-z]+"
-            matches = re.finditer(regex, data[name])
+            matches = re.finditer(regex, result)
             for match in matches:
                 if match.group() != 'i':
                     raise ValueError("variable '{}' undefined"
                                      .format(match.group()))
+            data[name] = str_to_value(result, data)
         else:
             expr = calculator(cmd[1], parser, 1)
             data[name] = Function(expr, param)

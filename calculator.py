@@ -1,3 +1,4 @@
+from ast import Expr
 import re
 from ft_complex import Complex
 from ft_matrix import Matrix
@@ -111,7 +112,10 @@ def calculator(expr, parser, option=0):
         expr = parser.start(expr)
         if tmp == expr:
             if option == 0:
+                tmp = expr
                 expr = decompose(expr)
+                if tmp == expr:
+                    break
             break
         tmp = expr
         match = re.search(r"\([^\(\)]+\)", expr)

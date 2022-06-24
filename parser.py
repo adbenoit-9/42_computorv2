@@ -4,7 +4,7 @@ from ft_math import ft_abs, ft_sqrt
 from function import Function
 from ft_matrix import Matrix
 from ft_complex import Complex, isrealnumber
-from conversion import str_to_matrix, str_to_value
+from conversion import str_to_complex, str_to_matrix, str_to_value
 from utils import check_brackets, get_unknown_var, isnumber, rm_useless_brackets, \
                   put_space, extract_function
 from calculator import calculator, do_operation
@@ -111,8 +111,17 @@ class Parser:
             raise ValueError('multiple variables not supported')
         tmp = str_to_matrix(result, self.data)
         if tmp is not None:
-            return tmp.__repr__()
+            return repr(tmp)
+        tmp = str_to_complex(result)
+        if tmp is not None:
+            result = repr(tmp)
         result = result.replace(' ', '')
+        matches = re.finditer(r"(?P<x>[\d\.]+)\*i", result)
+        i = 0
+        for match in matches:
+            result = result[:match.span()[0] - i] + match.group('x') + \
+                     'i' + result[match.span()[1] - i:]
+            i += 1
         name, param = extract_function(result, "abs")
         while param is not None:
             result = result.replace("abs({})".format(param),
@@ -225,11 +234,14 @@ class Parser:
         return expr
 
     def compute_power(self, expr):
-        re_pow = r"(?P<x1>[\d\.\[\];,]+|i)[\^](?P<x2>[-+]?[\d\.]+)"
+        re_pow = r"(?P<x1>[\d\.\[\];,]+|i|(\([\d\.]*[\+\-]?[\d\.]*\*?i\)))[\^](?P<x2>[-+]?[\d\.]+)"
         operation = re.search(re_pow, expr)
         new_expr = expr
         while operation is not None:
-            x1 = str_to_value(operation.group('x1'), self.data)
+            if operation.group('x1')[0] == '(':
+                x1 = str_to_value(operation.group('x1')[1:-1], self.data)
+            else:
+                x1 = str_to_value(operation.group('x1'), self.data)
             x2 = str_to_value(operation.group('x2'), self.data)
             start, end = operation.span()
             if start != 0 and new_expr[start - 1] == '^':
@@ -238,15 +250,19 @@ class Parser:
                 x = do_operation(x1, x2, '^')
             if (isrealnumber(x) is False or x > 0) and \
                     (start == 0 or new_expr[start - 1] not in '*/%^-+'):
-                new_expr = '{}+{}{}'.format(new_expr[:start], x,
-                                            new_expr[end:])
+                if isrealnumber(x) is True:
+                    new_expr = '{}+{:f}{}'.format(new_expr[:start], x,
+                                                new_expr[end:])
+                else:
+                    new_expr = '{}+{}{}'.format(new_expr[:start], x,
+                                                new_expr[end:])
             else:
                 new_expr = '{}{}{}'.format(new_expr[:start], x, new_expr[end:])
             operation = re.search(re_pow, new_expr)
         return new_expr.replace('-+', '-').replace('+-', '-')
 
     def compute_division(self, expr):
-        re_div = [r"(?P<x1>[\d\.]+|i)\/(?P<x2>[-]?[\d\.]+|i)",
+        re_div = [r"(?P<x1>[\d\.]+|i|(\([\d\.]*[\+\-]?[\d\.]*\*?i\)))\/(?P<x2>[-]?[\d\.]+|i|(\([\d\.]*[\+\-]?[\d\.]*\*?i\)))",
                   r"(?P<x1>[\d\.]+|i)\/\((?P<x2>[\w\.\+\-\*\%]+)\)",
                   r"\((?P<x1>[\w\.\+\-\*\%]+)\)\/\((?P<x2>[\w\.\+\-\*\%]+)\)"]
         for i in range(3):
@@ -279,7 +295,7 @@ class Parser:
         for match in matches:
             if re.search(r'\*{2}', match.group()):
                 raise ValueError("operator '**' supported only between matrices")
-            if match.span()[0] != 0 and expr[match.span()[0] - 1] == '%':
+            if match.span()[0] != 0 and expr[match.span()[0] - 1] in '%/':
                 return expr.replace('--', '+')
             tokens = match.group().split('*')
             result = str_to_value(tokens[0], self.data)
@@ -305,6 +321,9 @@ class Parser:
         re_mod = r"[\w\.\[\],;]+(%[+-]?[\w\.\[\],;]+)+"
         match = re.search(re_mod, expr)
         if match is None:
+            if re.search(r"\([\d\.\+\-\/\*]*i[\d\.\+\-\/\*]*\)%", expr) or \
+                    re.search(r"%\([\d\.\+\-\/\*]*i[\d\.\+\-\/\*]*\)", expr):
+                raise ValueError("operator '%' not supported on 'Complex'")
             return expr
         tokens = match.group().split('%')
         x1 = str_to_value(tokens[0], self.data)
@@ -315,6 +334,9 @@ class Parser:
         return expr.replace(match.group(), str(result))
 
     def do_matrix_operation(self, expr):
+        if re.search(r"\([\d\.\+\-\/\*]*i[\d\.\+\-\/\*]*\)\*{2}", expr) or \
+                re.search(r"\*{2}\([\d\.\+\-\/\*]*i[\d\.\+\-\/\*]*\)", expr):
+            raise ValueError("operator '**' not supported on 'Complex'")
         re_op = [r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
                  r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\-?[\w\.]+",
                  r"[\w\.]+(?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
@@ -331,8 +353,22 @@ class Parser:
         op = match.group('op')
         tokens = match.group().split(op)
         if i == 4 or i == 5:
+            if len(tokens) != 2:
+                tmp = ["", tokens[-1]]
+                for i in range(len(tokens) - 1):
+                    if i != 0:
+                        tmp[0] += '*'
+                    tmp[0] += tokens[i]
+                tokens = tmp
             tokens[0] = tokens[0][1:-1]
         elif i == 6:
+            if len(tokens) != 2:
+                tmp = [tokens[0], ""]
+                for i in range(1, len(tokens)):
+                    if i != 0:
+                        tmp[1] += '*'
+                    tmp[1] += tokens[i]
+                tokens = tmp
             tokens[1] = tokens[1][1:-1]
         result = str_to_value(tokens[0], self.data)
         if op == '.t':
@@ -357,7 +393,7 @@ class Parser:
         if re.search(r"(([\d\.]+i?)|[^a-z]i)\.t", new_expr) or \
                 new_expr.startswith('i.t'):
             raise ValueError('transpose supported only by matrices')
-        if new_expr[0] == "+":
+        if len(new_expr) and new_expr[0] == "+":
             new_expr = new_expr[1:]
         if new_expr == expr:
             return new_expr

@@ -206,6 +206,28 @@ class Complex:
         if self.im < 0:
             s += '-'
         if ft_abs(self.im) != 1 and self.im:
+            s += "{}*".format(ft_abs(im))
+        if self.im:
+            s += 'i'
+        if self.real == 0 and self.im == 0:
+            return '0'
+        return s
+
+    def __repr__(self):
+        if isinstance(self.im, float) and self.im.is_integer():
+            self.im = int(self.im)
+        if isinstance(self.real, float) and self.real.is_integer():
+            self.real = int(self.real)
+        s = ""
+        im = round(self.im, 4)
+        real = round(self.real, 4)
+        if self.real != 0:
+            s += "{}".format(real)
+        if self.im > 0 and self.real:
+            s += '+'
+        if self.im < 0:
+            s += '-'
+        if ft_abs(self.im) != 1 and self.im:
             s += "{}".format(ft_abs(im))
         if self.im:
             s += 'i'

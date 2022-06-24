@@ -100,7 +100,7 @@ class Polynomial:
                 d2 /= k2
                 d2 = int(d2)
             if isinstance(sqrt_delta.im, float) and sqrt_delta.im.is_integer():
-                p2 += str(sqrt_delta)
+                p2 += repr(sqrt_delta)
             else:
                 p2 += "i * sqrt({})".format(-delta)
             if d2 != 1:
