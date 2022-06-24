@@ -24,7 +24,7 @@ class Parser:
         if len(tokens) == 2 and tokens[0] == "show" and tokens[1] == "data":
             self.cmd = [tokens[0] + ' ' + tokens[1]]
             return
-        if self.check_space(tokens) == False:
+        if self.check_space(tokens) is False:
             raise ValueError('syntax error')
         cmd = cmd.replace(' ', '')
         re_abs = r"\|.+\|"
@@ -83,7 +83,7 @@ class Parser:
         for token in tokens:
             if token[-1] in "[]()-+/*=%^,;":
                 space = True
-            elif space == False and token[0] not in "[]()-+/*=%^,;?":
+            elif space is False and token[0] not in "[]()-+/*=%^,;?":
                 return False
             else:
                 space = False
