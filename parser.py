@@ -81,10 +81,10 @@ class Parser:
     def check_space(self, tokens):
         space = True
         for token in tokens:
-            if token[-1] in "[]()-+/*=%^,;":
-                space = True
-            elif space is False and token[0] not in "[]()-+/*=%^,;?":
+            if space is False and token[0] not in "[]()-+/*=%^,;?":
                 return False
+            elif token[-1] in "[]()-+/*=%^,;":
+                space = True
             else:
                 space = False
         return True
@@ -186,10 +186,10 @@ class Parser:
     def standardize_mul(self, expr):
         expr = expr.replace(')(', ')*(')
         expr = expr.replace('-(', '-1*(')
-        regex = [r"(?P<x1>\d+\.?\d*)(?P<x2>([a-su-z]|[a-z]{2,}))",
-                 r"(?P<x1>[a-z])(?P<x2>\d+\.?\d*)",
-                 r"(?P<x1>\d+\.?\d*)(?P<x2>\()",
-                 r"(?P<x1>\))(?P<x2>\d+\.?\d*)"]
+        regex = [r"(?P<x1>\d+\.?\d*)(?P<x2>([a-su-z]|[a-z]{2,}|\[))",
+                 r"(?P<x1>[a-z]|\])(?P<x2>\d+\.?\d*)",
+                 r"(?P<x1>(\d+\.?\d*)|\])(?P<x2>\()",
+                 r"(?P<x1>\))(?P<x2>(\d+\.?\d*)|[a-z]+|\[)"]
         match = None
         for i in range(len(regex)):
             match = re.search(regex[i], expr)
@@ -249,8 +249,8 @@ class Parser:
             else:
                 x = do_operation(x1, x2, '^')
             if (isrealnumber(x) is False or x > 0) and \
-                    (start == 0 or new_expr[start - 1] not in '*/%^-+'):
-                if isrealnumber(x) is True:
+                    (start == 0 or new_expr[start - 1] not in '*/%^-+('):
+                if isinstance(x, float) is True:
                     new_expr = '{}+{:f}{}'.format(new_expr[:start], x,
                                                 new_expr[end:])
                 else:
@@ -262,8 +262,8 @@ class Parser:
         return new_expr.replace('-+', '-').replace('+-', '-')
 
     def compute_division(self, expr):
-        re_div = [r"(?P<x1>[\d\.]+|i|(\([\d\.]*[\+\-]?[\d\.]*\*?i\)))\/(?P<x2>[-]?[\d\.]+|i|(\([\d\.]*[\+\-]?[\d\.]*\*?i\)))",
-                  r"(?P<x1>[\d\.]+|i)\/\((?P<x2>[\w\.\+\-\*\%]+)\)",
+        re_div = [r"(?P<x1>[\d\.]+|i|[a-z]+|(\([\d\.]*[\+\-]?[\d\.]*\*?i\)))\/(?P<x2>[-]?[\d\.]+|i|(\([\d\.]*[\+\-]?[\d\.]*\*?i\)))",
+                  r"(?P<x1>[\d\.]+|i|[a-z]+)\/\((?P<x2>[\w\.\+\-\*\%]+)\)",
                   r"\((?P<x1>[\w\.\+\-\*\%]+)\)\/\((?P<x2>[\w\.\+\-\*\%]+)\)"]
         for i in range(3):
             match = re.search(re_div[i], expr)
@@ -282,6 +282,9 @@ class Parser:
         result = do_operation(x1, x2, '/')
         if isinstance(result, str) or (match.span()[0] != 0 and
                                        expr[match.span()[0] - 1] in '/^'):
+            if isinstance(result, str) and match.span()[0] != 0 and \
+                    expr[match.span()[0] - 1] == '*':
+                return expr[:match.span()[0] - 1] + '/' + str(x2) + '*' + str(x1) + expr[match.span()[1]:]
             tmp = self.compute_division(expr[match.span()[1]:])
             return expr[:match.span()[1]] + tmp
         if isrealnumber(result):
@@ -307,7 +310,7 @@ class Parser:
                     if isinstance(x2, str):
                         if x2 in '.;,':
                             raise ValueError('syntax error')
-                        raise ValueError('multiple variables not supported')
+                        raise ValueError('multiple variables not supported', x2, result, expr)
             tmp = expr
             if isrealnumber(result):
                 expr = expr.replace(match.group(), '{:f}'.format(result))
@@ -386,7 +389,8 @@ class Parser:
         return expr
 
     def reduce(self, expr):
-        new_expr = self.compute_division(expr).replace('--', '+')
+        new_expr = self.factor_power(expr)
+        new_expr = self.compute_division(new_expr).replace('--', '+')
         new_expr = self.compute_multiplication(new_expr)
         new_expr = self.do_matrix_operation(new_expr)
         new_expr = self.compute_modulo(new_expr)

@@ -9,6 +9,11 @@ from conversion import str_to_value
 
 
 def do_operation(x1, x2, op):
+    not_var = ['tan', 'abs', 'sin', 'cos', 'exp', 'i', 't', 'sqrt']
+    if isinstance(x1, str) and isinstance(x2, str) and x1 != x2 and \
+            x1.isalpha() and x2.isalpha() and \
+            x1 not in not_var and x2 not in not_var:
+        raise ValueError('multiple variables not supported')
     if isinstance(x1, str):
         if isinstance(x2, int) and x2 == 0 and op in '*/':
             return 0

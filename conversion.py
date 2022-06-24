@@ -71,7 +71,7 @@ def str_to_value(x, data):
             return int(x)
         return x
     except Exception:
-        if x.isalpha() is False and \
+        if len(x) and x.isalpha() is False and \
                 any(operator in "[]()-+/*=%^,;" for operator in x) is False:
             raise ValueError('illegal variable name: {}'.format(x))
         return x
