@@ -245,12 +245,9 @@ class Parser:
                 x1 = str_to_value(operation.group('x1'), self.data)
             x2 = str_to_value(operation.group('x2'), self.data)
             start, end = operation.span()
-            if start != 0 and new_expr[start - 1] == '^':
-                x = do_operation(x1, x2, '*')
-            else:
-                x = do_operation(x1, x2, '^')
+            x = do_operation(x1, x2, '^')
             if (isrealnumber(x) is False or x > 0) and \
-                    (start == 0 or new_expr[start - 1] not in '*/%^-+('):
+                    (start == 0 or new_expr[start - 1] not in '*/%-^+('):
                 if isinstance(x, float) is True:
                     new_expr = '{}+{:f}{}'.format(new_expr[:start], x,
                                                   new_expr[end:])
