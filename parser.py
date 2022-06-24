@@ -5,8 +5,8 @@ from function import Function
 from ft_matrix import Matrix
 from ft_complex import Complex, isrealnumber
 from conversion import str_to_complex, str_to_matrix, str_to_value
-from utils import check_brackets, get_unknown_var, isnumber, rm_useless_brackets, \
-                  put_space, extract_function
+from utils import check_brackets, get_unknown_var, isnumber, \
+                  rm_useless_brackets, put_space, extract_function
 from calculator import calculator, do_operation
 
 
@@ -68,7 +68,8 @@ class Parser:
         return self.brackets_syntax(cmd)
 
     def brackets_syntax(self, expr):
-        matches = list(re.finditer(r"(\([^\(\)\[\]]*\))|(\[[^\(\)\[\]]*\])", expr))
+        matches = list(re.finditer(r"(\([^\(\)\[\]]*\))|(\[[^\(\)\[\]]*\])",
+                       expr))
         if re.search(r"[\(\)\[\]]", expr) and len(matches) == 0:
             return False
         for match in matches:
@@ -252,7 +253,7 @@ class Parser:
                     (start == 0 or new_expr[start - 1] not in '*/%^-+('):
                 if isinstance(x, float) is True:
                     new_expr = '{}+{:f}{}'.format(new_expr[:start], x,
-                                                new_expr[end:])
+                                                  new_expr[end:])
                 else:
                     new_expr = '{}+{}{}'.format(new_expr[:start], x,
                                                 new_expr[end:])
@@ -284,7 +285,8 @@ class Parser:
                                        expr[match.span()[0] - 1] in '/^'):
             if isinstance(result, str) and match.span()[0] != 0 and \
                     expr[match.span()[0] - 1] == '*':
-                return expr[:match.span()[0] - 1] + '/' + str(x2) + '*' + str(x1) + expr[match.span()[1]:]
+                return expr[:match.span()[0] - 1] + '/' + str(x2) + '*' + \
+                       str(x1) + expr[match.span()[1]:]
             tmp = self.compute_division(expr[match.span()[1]:])
             return expr[:match.span()[1]] + tmp
         if isrealnumber(result):
@@ -310,7 +312,7 @@ class Parser:
                     if isinstance(x2, str):
                         if x2 in '.;,':
                             raise ValueError('syntax error')
-                        raise ValueError('multiple variables not supported', x2, result, expr)
+                        raise ValueError('multiple variables not supported')
             tmp = expr
             if isrealnumber(result):
                 expr = expr.replace(match.group(), '{:f}'.format(result))

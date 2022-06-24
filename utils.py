@@ -127,7 +127,8 @@ def get_unknown_var(expr):
     matches = re.finditer(r"[a-z]+", expr)
     var = []
     for match in matches:
-        if match.group() in ['i', 't', 'tan', 'exp', 'tan', 'cos', 'sin', 'sqrt']:
+        if match.group() in ['i', 't', 'tan', 'exp', 'tan', 'cos',
+                             'sin', 'sqrt']:
             continue
         if match.group() not in var:
             var.append(match.group())
