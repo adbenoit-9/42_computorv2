@@ -15,8 +15,12 @@ def str_to_matrix(mat, data={}):
     rows = mat[1:-1].split(';')
     lst = [[] for _ in range(len(rows))]
     for i, row in enumerate(rows):
+        if row[0] != '[' or row[-1] != ']':
+            return None
         elem_lst = row[1:-1].split(',')
         for elem in elem_lst:
+            if '[' in elem or ']' in elem:
+                return None
             lst[i].append(str_to_value(elem, data))
     return Matrix(lst)
 

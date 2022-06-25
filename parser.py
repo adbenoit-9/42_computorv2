@@ -55,7 +55,7 @@ class Parser:
         match = re.search(re_illegal_char, cmd)
         if match:
             raise ValueError('illegal character: {}'.format(match.group()))
-        re_point = r"[\*\/\%\^\+\-=\.\(\)\[;,]\."
+        re_point = r"[\*\/\%\^\+\-=\.\(\[;,]\."
         if re.search(re_point, cmd):
             return False
         re_semicolon = r"\[\[.*\](;\[.*\])+\]"
@@ -335,6 +335,21 @@ class Parser:
             return expr.replace(match.group(), '{:f}'.format(result))
         return expr.replace(match.group(), str(result))
 
+    def join_tokens(self, tokens, op, start, end):
+        new_tokens = []
+        joined = ""
+        for i in range(start):
+            new_tokens.append(tokens[i])
+        for i in range(start, end):
+            if i != 0:
+                joined += op
+            joined += tokens[i]
+        if len(joined):
+            new_tokens.append(joined)
+        for i in range(end, len(tokens)):
+            new_tokens.append(tokens[i])
+        return new_tokens
+        
     def do_matrix_operation(self, expr):
         if re.search(r"\([\d\.\+\-\/\*]*i[\d\.\+\-\/\*]*\)\*{2}", expr) or \
                 re.search(r"\*{2}\([\d\.\+\-\/\*]*i[\d\.\+\-\/\*]*\)", expr):
@@ -356,28 +371,18 @@ class Parser:
         tokens = match.group().split(op)
         if i == 4 or i == 5:
             if len(tokens) != 2:
-                tmp = ["", tokens[-1]]
-                for i in range(len(tokens) - 1):
-                    if i != 0:
-                        tmp[0] += '*'
-                    tmp[0] += tokens[i]
-                tokens = tmp
+                tokens = self.join_tokens(tokens, '*', 0, len(tokens) - 1)
             tokens[0] = tokens[0][1:-1]
         elif i == 6:
             if len(tokens) != 2:
-                tmp = [tokens[0], ""]
-                for i in range(1, len(tokens)):
-                    if i != 0:
-                        tmp[1] += '*'
-                    tmp[1] += tokens[i]
-                tokens = tmp
+                tokens = self.join_tokens(tokens, '*', 1, len(tokens))
             tokens[1] = tokens[1][1:-1]
         result = str_to_value(tokens[0], self.data)
         if op == '.t':
             if isinstance(result, Matrix):
                 result = result.T()
             else:
-                raise ValueError('transpose supported only by matrices')
+                raise ValueError('transpose supported only by matrices', result, op)
         elif op.startswith('.'):
             raise ValueError('syntax error')
         else:
@@ -393,7 +398,7 @@ class Parser:
         new_expr = self.compute_multiplication(new_expr)
         new_expr = self.do_matrix_operation(new_expr)
         new_expr = self.compute_modulo(new_expr)
-        if re.search(r"(([\d\.]+i?)|[^a-z]i)\.t", new_expr) or \
+        if re.search(r"((\(?[\d\.]+i?\)?)|[^a-z]i)\.t", new_expr) or \
                 new_expr.startswith('i.t'):
             raise ValueError('transpose supported only by matrices')
         if len(new_expr) and new_expr[0] == "+":
