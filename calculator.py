@@ -43,7 +43,7 @@ def do_operation(x1, x2, op):
         elif op == '**':
             if isinstance(x1, Matrix) is False:
                 raise TypeError("Matrix product with '{}' not supported"
-                            .format(type(x1).__name__))
+                                .format(type(x1).__name__))
             result = x1.dot(x2)
         else:
             raise ValueError("operator '{}' not supported.".format(op))
