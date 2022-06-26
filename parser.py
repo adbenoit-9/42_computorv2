@@ -351,16 +351,18 @@ class Parser:
         return new_tokens
         
     def do_matrix_operation(self, expr):
+        re_row = r"\[[\d\.i\+\-\*\/\%]+(,[\d\.i\+\-\*\/\%]+)*\]"
+        re_mat = r"\[" + re_row + r"(," + re_row + ")*\]"
         if re.search(r"\([\d\.\+\-\/\*]*i[\d\.\+\-\/\*]*\)\*{2}", expr) or \
                 re.search(r"\*{2}\([\d\.\+\-\/\*]*i[\d\.\+\-\/\*]*\)", expr):
             raise ValueError("operator '**' not supported on 'Complex'")
-        re_op = [r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
-                 r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\-?[\w\.]+",
-                 r"[\w\.]+(?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
-                 r"\[[\w\.\[\],;\-\+]+\](?P<op>\.[a-z]+)",
-                 r"\(\[[\w\.\[\],;\-\+]+\]\)(?P<op>\.[a-z]+)",
-                 r"\([\di\.\-\+\*]+\)(?P<op>[\*\/]{1,2})\[[\w\.\[\],;\-\+]+\]",
-                 r"\[[\w\.\[\],;\-\+]+\](?P<op>[\*\/]{1,2})\([\di\.\-\+\*]+\)"]
+        re_op = [re_mat + r"(?P<op>[\*\/]{1,2})" + re_mat,
+                 re_mat + r"(?P<op>[\*\/]{1,2})\-?[\w\.]+",
+                 r"[\w\.]+(?P<op>[\*\/]{1,2})" + re_mat,
+                 re_mat + r"(?P<op>\.[a-z]+)",
+                 r"\(" + re_mat + r"\)(?P<op>\.[a-z]+)",
+                 r"\([\di\.\-\+\*]+\)(?P<op>[\*\/]{1,2})" + re_mat,
+                 re_mat + r"(?P<op>[\*\/]{1,2})\([\di\.\-\+\*]+\)"]
         for i in range(len(re_op)):
             match = re.search(re_op[i], expr)
             if match is not None:
