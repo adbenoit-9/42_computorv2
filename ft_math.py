@@ -1,7 +1,11 @@
 from ft_complex import Complex
+from utils import isrealnumber, isnumber
 
 
 def ft_sqrt(n):
+    if isrealnumber(n) is False:
+        raise TypeError("must be real number, not {}"
+                         .format(type(n).__name__))
     iscomplex = False
     if n < 0:
         iscomplex = True
@@ -26,9 +30,11 @@ def ft_sqrt(n):
 
 
 def ft_abs(n):
-    if isinstance(n, int) is False and isinstance(n, float) is False:
-        raise TypeError("bad operand type for abs: '{}'"
+    if isnumber(n) is False:
+        raise TypeError("must be real number or Complex, not {}"
                         .format(type(n).__name__))
+    if isinstance(n, Complex):
+        return n.conjugate()
     if n > 0:
         return n
     return n * -1

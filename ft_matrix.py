@@ -1,6 +1,7 @@
 from utils import isrealnumber, isnumber
 from ft_complex import Complex
 
+
 class Matrix:
     def __init__(self, *args):
         self.values = []

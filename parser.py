@@ -3,7 +3,7 @@ import math
 from ft_math import ft_abs, ft_sqrt
 from function import Function
 from ft_matrix import Matrix
-from ft_complex import Complex, isrealnumber
+from ft_complex import isrealnumber
 from conversion import str_to_complex, str_to_matrix, str_to_value
 from utils import check_brackets, get_unknown_var, isnumber, \
                   rm_useless_brackets, put_space, extract_function
@@ -59,7 +59,7 @@ class Parser:
         if re.search(re_point, cmd):
             return False
         re_semicolon = r"\[\[.*\](;\[.*\])+\]"
-        re_coma = r"\[.*(,.*)+\]"
+        re_coma = r"\[[^\[\]]*(,[^\[\]]*)+\]"
         if (cmd.find(';') != -1 and re.search(re_semicolon, cmd) is None) or \
                 (cmd.find(',') != -1 and re.search(re_coma, cmd) is None):
             return False
@@ -151,10 +151,7 @@ class Parser:
         if isinstance(param, str):
             param = calculator(param, self)
             param = str_to_value(param, self.data)
-        if name == "abs" and isinstance(param, Complex):
-            value = param.conjugate()
-            expr = expr.replace(funct, str(value))
-        elif name in math_funct.keys() and isinstance(param, str) is False:
+        if name in math_funct.keys() and isinstance(param, str) is False:
             try:
                 value = math_funct[name](param)
                 expr = expr[:i] + str(value) + expr[j:]
@@ -344,7 +341,7 @@ class Parser:
         for i in range(start):
             new_tokens.append(tokens[i])
         for i in range(start, end):
-            if i != 0:
+            if i != start:
                 joined += op
             joined += tokens[i]
         if len(joined):
@@ -352,11 +349,10 @@ class Parser:
         for i in range(end, len(tokens)):
             new_tokens.append(tokens[i])
         return new_tokens
-        
+
     def do_matrix_operation(self, expr):
-        # print(expr)
         re_row = r"\[[\d\.i\+\-\*\/\%]+(,[\d\.i\+\-\*\/\%]+)*\]"
-        re_mat = r"\[" + re_row + r"(;" + re_row + ")*\]"
+        re_mat = r"\[" + re_row + r"(;" + re_row + r")*\]"
         if re.search(r"\([\d\.\+\-\/\*]*i[\d\.\+\-\/\*]*\)\*{2}", expr) or \
                 re.search(r"\*{2}\([\d\.\+\-\/\*]*i[\d\.\+\-\/\*]*\)", expr):
             raise ValueError("operator '**' not supported on 'Complex'")
@@ -374,13 +370,14 @@ class Parser:
             return expr
         op = match.group('op')
         tokens = match.group().split(op)
-        if i == 4 or i == 5:
-            if len(tokens) != 2:
-                tokens = self.join_tokens(tokens, '*', 0, len(tokens) - 1)
+        for j in range(1, len(tokens)):
+            if tokens[j].startswith('(') or tokens[j].startswith('[['):
+                break
+        tokens = self.join_tokens(tokens, '*', j, len(tokens))
+        tokens = self.join_tokens(tokens, '*', 0, j)
+        if i == 4:
             tokens[0] = tokens[0][1:-1]
-        elif i == 6:
-            if len(tokens) != 2:
-                tokens = self.join_tokens(tokens, '*', 1, len(tokens))
+        elif i == 5:
             tokens[1] = tokens[1][1:-1]
         result = str_to_value(tokens[0], self.data)
         if op == '.t':

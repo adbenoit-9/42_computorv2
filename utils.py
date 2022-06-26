@@ -59,8 +59,6 @@ def extract_function(expr, option=None):
         for match in matches:
             if match.group() != 'i':
                 return expr, None
-            elif name != 'abs':
-                raise ValueError("{}: complex not supported".format(name))
     return name, param
 
 

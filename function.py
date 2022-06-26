@@ -1,6 +1,6 @@
 from ft_complex import Complex
 from polynomial import Polynomial
-from utils import put_space, rm_useless_brackets
+from utils import put_space
 import re
 
 
@@ -20,7 +20,8 @@ class Function:
         self.expr = expr
 
     def image(self, x):
-        if isinstance(x, str) or isinstance(x, Complex):
+        if (isinstance(x, str) and x.isalpha() is False) or \
+                isinstance(x, Complex):
             param = "({})".format(x)
         else:
             param = str(x)
@@ -33,7 +34,6 @@ class Function:
                 expr = expr[:match.span()[0] + i] + param + \
                        expr[match.span()[1] + i:]
                 i += len(param) - len(self.x)
-        expr = rm_useless_brackets(expr)
         return expr
 
     def resolve(self, x, y):

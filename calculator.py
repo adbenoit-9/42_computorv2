@@ -1,4 +1,3 @@
-from ast import Expr
 import re
 from ft_complex import Complex
 from ft_matrix import Matrix
@@ -64,7 +63,7 @@ def split_operation(expr):
     tmp = 0
     for elem in matches:
         begin, end = elem.span()
-        if begin != 0 and expr[begin - 1] not in "*/%^":
+        if begin != 0 and expr[begin - 1] not in "*/%^[":
             if begin != 0:
                 tokens.append(expr[tmp:begin])
             tokens.append(elem.group())
