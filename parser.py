@@ -151,12 +151,15 @@ class Parser:
         if isinstance(param, str):
             param = calculator(param, self)
             param = str_to_value(param, self.data)
-        if name in math_funct.keys() and isrealnumber(param):
-            value = math_funct[name](param)
-            expr = expr[:i] + str(value) + expr[j:]
-        elif name == "abs" and isinstance(param, Complex):
+        if name == "abs" and isinstance(param, Complex):
             value = param.conjugate()
             expr = expr.replace(funct, str(value))
+        elif name in math_funct.keys() and isinstance(param, str) is False:
+            try:
+                value = math_funct[name](param)
+                expr = expr[:i] + str(value) + expr[j:]
+            except TypeError as err:
+                raise ValueError(err)
         elif name in self.data.keys():
             if (i == 0 or expr[i - 1] not in "%*/)") and \
                     (j == len(expr) or expr[j] not in "%*/)"):
@@ -351,8 +354,9 @@ class Parser:
         return new_tokens
         
     def do_matrix_operation(self, expr):
+        # print(expr)
         re_row = r"\[[\d\.i\+\-\*\/\%]+(,[\d\.i\+\-\*\/\%]+)*\]"
-        re_mat = r"\[" + re_row + r"(," + re_row + ")*\]"
+        re_mat = r"\[" + re_row + r"(;" + re_row + ")*\]"
         if re.search(r"\([\d\.\+\-\/\*]*i[\d\.\+\-\/\*]*\)\*{2}", expr) or \
                 re.search(r"\*{2}\([\d\.\+\-\/\*]*i[\d\.\+\-\/\*]*\)", expr):
             raise ValueError("operator '**' not supported on 'Complex'")
@@ -360,7 +364,6 @@ class Parser:
                  re_mat + r"(?P<op>[\*\/]{1,2})\-?[\w\.]+",
                  r"[\w\.]+(?P<op>[\*\/]{1,2})" + re_mat,
                  re_mat + r"(?P<op>\.[a-z]+)",
-                 r"\(" + re_mat + r"\)(?P<op>\.[a-z]+)",
                  r"\([\di\.\-\+\*]+\)(?P<op>[\*\/]{1,2})" + re_mat,
                  re_mat + r"(?P<op>[\*\/]{1,2})\([\di\.\-\+\*]+\)"]
         for i in range(len(re_op)):
