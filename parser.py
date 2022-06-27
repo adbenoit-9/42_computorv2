@@ -3,6 +3,7 @@ import math
 from ft_math import ft_abs, ft_sqrt
 from function import Function
 from ft_matrix import Matrix
+from ft_real import Real
 from ft_complex import isrealnumber
 from conversion import str_to_complex, str_to_matrix, str_to_value
 from utils import check_brackets, get_unknown_var, isnumber, \
@@ -153,7 +154,12 @@ class Parser:
             param = str_to_value(param, self.data)
         if name in math_funct.keys() and isinstance(param, str) is False:
             try:
-                value = math_funct[name](param)
+                if name not in ['sqrt', 'abs'] and isinstance(param, Real):
+                    value = math_funct[name](param.value)
+                else:
+                    value = math_funct[name](param)
+                if name not in ['sqrt', 'abs']:
+                    value = Real(value)
                 expr = expr[:i] + str(value) + expr[j:]
             except TypeError as err:
                 raise ValueError(err)
@@ -248,10 +254,6 @@ class Parser:
             x = do_operation(x1, x2, '^')
             if (isrealnumber(x) is False or x > 0) and \
                     (start == 0 or new_expr[start - 1] not in '*/%-^+('):
-                if isinstance(x, float) is True:
-                    new_expr = '{}+{:f}{}'.format(new_expr[:start], x,
-                                                  new_expr[end:])
-                else:
                     new_expr = '{}+{}{}'.format(new_expr[:start], x,
                                                 new_expr[end:])
             else:
@@ -287,7 +289,7 @@ class Parser:
             tmp = self.compute_division(expr[match.span()[1]:])
             return expr[:match.span()[1]] + tmp
         if isrealnumber(result):
-            return expr[:match.span()[0]] + '{:f}'.format(result) + \
+            return expr[:match.span()[0]] + str(result) + \
                    expr[match.span()[1]:]
         return expr[:match.span()[0]] + str(result) + expr[match.span()[1]:]
 
@@ -311,10 +313,7 @@ class Parser:
                             raise ValueError('syntax error')
                         raise ValueError('multiple variables not supported')
             tmp = expr
-            if isrealnumber(result):
-                expr = expr.replace(match.group(), '{:f}'.format(result))
-            else:
-                expr = expr.replace(match.group(), str(result))
+            expr = expr.replace(match.group(), str(result))
             if tmp != expr:
                 break
         return expr.replace('--', '+')
@@ -332,7 +331,7 @@ class Parser:
         x2 = str_to_value(tokens[1], self.data)
         result = do_operation(x1, x2, '%')
         if isrealnumber(result):
-            return expr.replace(match.group(), '{:f}'.format(result))
+            return expr.replace(match.group(), str(result))
         return expr.replace(match.group(), str(result))
 
     def join_tokens(self, tokens, op, start, end):

@@ -1,3 +1,6 @@
+from ft_real import Real
+
+
 class State:
     ERROR = -1
     BEGIN = 0
@@ -14,7 +17,7 @@ def parse_power(coefs, x, state, val, side):
     if state != State.GET_POWER:
         val *= side
     if x.startswith('X^'):
-        coefs[int(x[2:])] += val
+        coefs[int(str(x[2:]))] += val
     elif x == 'X':
         coefs[1] += val
     else:
@@ -40,7 +43,7 @@ def parse_value(x, state, val, side):
     if state != State.GET_VALUE and state != State.BEGIN:
         return State.ERROR, val
     if x.startswith('X') is False:
-        val = val * float(x) * side
+        val = val * Real(x) * side
     return State.GET_MUL, val
 
 
@@ -101,7 +104,4 @@ def parse_polynomial(polynomial):
         coefs[0] += val
     elif state != State.GET_SIGN or side != -1:
         return None
-    for i in range(len(coefs)):
-        if isinstance(coefs[i], float) and coefs[i].is_integer():
-            coefs[i] = int(coefs[i])
     return coefs

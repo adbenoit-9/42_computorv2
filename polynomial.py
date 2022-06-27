@@ -1,5 +1,6 @@
 from parse_polynomial import parse_polynomial
 from ft_math import pgcd, ft_sqrt, ft_abs
+from ft_real import Real
 
 
 class Polynomial:
@@ -27,15 +28,13 @@ class Polynomial:
         denom = 2 * self.coefs[2]
         ret, k = pgcd(denom, b)
         if ret is True:
-            b = int(b / k)
-            denom = int(denom / k)
+            b = b / k
+            denom = denom / k
             if ft_abs(denom) != 1 and b != 0:
                 print(form2.format(unknown=self.unknown, num=b, denom=denom))
         elif ft_abs(denom) != 1 and b != 0:
             print(form2.format(unknown=self.unknown, num=b, denom=denom))
         result = b / denom
-        if result.is_integer():
-            result = int(result)
         print(form3.format(unknown=self.unknown, result=result))
 
     def positive_delta_step(self, delta):
@@ -44,11 +43,11 @@ class Polynomial:
         for i in range(2):
             data = {
                 'k': i + 1,
-                'b': -self.coefs[1],
+                'b': Real(-self.coefs[1]),
                 'sign': '-' if i == 0 else '+',
-                'delta': delta,
+                'delta': Real(delta),
                 'sqrt_delta': ft_sqrt(delta),
-                'a': self.coefs[2],
+                'a': Real(self.coefs[2]),
                 'unknown': self.unknown
             }
             denom = 2 * data['a']
@@ -56,17 +55,13 @@ class Polynomial:
                 num = data['b'] - data['sqrt_delta']
             else:
                 num = data['b'] + data['sqrt_delta']
-            if isinstance(num, int) or num.is_integer():
-                num = int(num)
             ret, k = pgcd(denom, num)
             if ret is True:
-                num = int(num / k)
-                denom = int(denom / k)
+                num = num / k
+                denom = denom / k
             if ft_abs(denom) != 1 and num != 0 and isinstance(num, int):
                 print(form4.format(**data, num=num, denom=denom))
             result = num / denom
-            if result.is_integer():
-                result = int(result)
             print(form5.format(**data, result=result))
 
     def negative_delta_step(self, delta):
@@ -74,9 +69,9 @@ class Polynomial:
         for i in range(2):
             data = {
                 'k': i + 1,
-                'b': -self.coefs[1],
+                'b': Real(-self.coefs[1]),
                 'sign': "",
-                'denom': 2 * self.coefs[2],
+                'denom': Real(2 * self.coefs[2]),
                 'unknown': self.unknown
             }
             sqrt_delta = ft_sqrt(delta)
@@ -87,9 +82,7 @@ class Polynomial:
             p2 = ""
             if ret is True:
                 data['b'] /= k
-                data['b'] = int(data['b'])
                 d1 /= k
-                d1 = int(d1)
             if data['b'] != 0:
                 p1 += str(data['b'])
                 if d1 != 1:
@@ -98,8 +91,7 @@ class Polynomial:
             if ret2 is True:
                 sqrt_delta /= k2
                 d2 /= k2
-                d2 = int(d2)
-            if isinstance(sqrt_delta.im, float) and sqrt_delta.im.is_integer():
+            if sqrt_delta.im.is_integer():
                 p2 += repr(sqrt_delta)
             else:
                 p2 += "i * sqrt({})".format(-delta)
@@ -114,8 +106,6 @@ class Polynomial:
             print(form.format(**data, part1=p1, part2=p2))
 
     def show_step(self, delta):
-        if isinstance(delta, float) and delta.is_integer():
-            delta = int(delta)
         if delta > 0:
             print("Two solutions in R:")
             self.positive_delta_step(delta)
@@ -143,14 +133,12 @@ class Polynomial:
             x = b / denom
             ret, k = pgcd(denom, b)
             if ret is True:
-                b = int(b / k)
-                denom = int(denom / k)
+                b = b / k
+                denom = denom / k
                 if ft_abs(denom) != 1 and b != 0:
                     print("{} = {} / {}".format(self.unknown, b, denom))
-            elif ft_abs(denom) != 1 and b != 0:
+            elif ft_abs(denom) != 1 and b != 0 and denom.is_integer() and b.is_integer():
                 print("{} = {} / {}".format(self.unknown, b, denom))
-            if isinstance(x, float) and x.is_integer():
-                x = int(x)
             print("{} = {}".format(self.unknown, x))
             return True
         delta = self.coefs[1] * self.coefs[1] - 4 * \

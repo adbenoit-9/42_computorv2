@@ -1,5 +1,6 @@
 from utils import isrealnumber, isnumber
 from ft_complex import Complex
+from ft_real import Real
 
 
 class Matrix:
@@ -112,9 +113,7 @@ term-to-term multiplication between matrices of differents dimensions""")
         for i, row in enumerate(self.values):
             ret += '['
             for j, val in enumerate(row):
-                if isinstance(val, float):
-                    ret += ' {} '.format(round(val, 4))
-                elif isinstance(val, Complex):
+                if isinstance(val, Complex):
                     ret += ' {} '.format(repr(val))
                 else:
                     ret += ' {} '.format(val)
@@ -131,12 +130,10 @@ term-to-term multiplication between matrices of differents dimensions""")
         for i, row in enumerate(self.values):
             ret += '['
             for j, val in enumerate(row):
-                if isinstance(val, float):
-                    ret += '{}'.format(round(val, 4))
-                elif isinstance(val, Complex):
+                if isinstance(val, Complex):
                     ret += repr(val)
                 else:
-                    ret += '{}'.format(val)
+                    ret += str(val)
                 if j != self.shape[1] - 1:
                     ret += ','
             if i != self.shape[0] - 1:
@@ -161,7 +158,7 @@ term-to-term multiplication between matrices of differents dimensions""")
             return False
 
     def __pow__(self, n):
-        if isinstance(n, int) is False:
+        if isinstance(n, Real) is False or n.is_integer() is False:
             raise TypeError("invalid power type '{}'".format(type(n).__name__))
         if n < 0:
             raise ValueError("negative power not supported")

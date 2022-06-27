@@ -1,10 +1,18 @@
+from ft_real import Real
+
+
 def isrealnumber(n):
-    if isinstance(n, float) or isinstance(n, int):
+    if isinstance(n, Real):
+        return True
+    elif isinstance(n, float) or isinstance(n, int):
         return True
     return False
 
 
 def ft_sqrt(n):
+    if isrealnumber(n) is False:
+        raise TypeError("must be real number, not '{}'"
+                        .format(type(n).__name__))
     iscomplex = False
     if n < 0:
         iscomplex = True
@@ -13,22 +21,24 @@ def ft_sqrt(n):
     while sqrt * sqrt < n:
         sqrt += 1.
     if sqrt * sqrt == n:
+        if iscomplex:
+            return Complex(0, sqrt)
         return sqrt
     sqrt -= 1.
     tmp = 0.
     while tmp != sqrt:
         tmp = sqrt
         sqrt = (n / tmp + tmp) / 2
-    if sqrt.is_integer():
-        sqrt = int(sqrt)
     if iscomplex:
         return Complex(0, sqrt)
     return sqrt
 
 
 def ft_abs(n):
-    if isinstance(n, int) is False and isinstance(n, float) is False:
-        raise TypeError("bad operand type for abs: '{}'"
+    if isinstance(n, Complex):
+        return n.conjugate()
+    if isrealnumber(n) is False:
+        raise TypeError("must be number, not '{}'"
                         .format(type(n).__name__))
     if n > 0:
         return n
@@ -38,9 +48,9 @@ def ft_abs(n):
 class Complex:
     def __init__(self, real=0, im=0):
         if isrealnumber(real) is False or isrealnumber(im) is False:
-            raise TypeError('Invalid argument.')
-        self.real = real
-        self.im = im
+            raise TypeError('Invalid argument.', type(real), type(im))
+        self.real = Real(real)
+        self.im = Real(im)
 
     def module(self):
         return ft_sqrt(self.real ** 2 + self.im ** 2)
@@ -168,9 +178,10 @@ class Complex:
         return Complex(real=real, im=im)
 
     def __pow__(self, n):
-        if isinstance(n, int) is False:
+        if isrealnumber(n) is False or n.is_integer() is False:
             raise ValueError("invalid power type '{}'"
                              .format(type(n).__name__))
+        n = int(n.value)
         if n < 0:
             raise ValueError("negative power not supported")
         res = self.copy()
@@ -192,21 +203,15 @@ class Complex:
         return not self.__eq__(other)
 
     def __str__(self):
-        if isinstance(self.im, float) and self.im.is_integer():
-            self.im = int(self.im)
-        if isinstance(self.real, float) and self.real.is_integer():
-            self.real = int(self.real)
         s = ""
-        im = round(self.im, 4)
-        real = round(self.real, 4)
         if self.real != 0:
-            s += "{}".format(real)
-        if self.im > 0 and self.real:
+            s += str(self.real)
+        if self.im > 0 and self.real != 0:
             s += '+'
         if self.im < 0:
             s += '-'
-        if ft_abs(self.im) != 1 and self.im:
-            s += "{}*".format(ft_abs(im))
+        if ft_abs(self.im) != 1 and self.im != 0:
+            s += "{}*".format(ft_abs(self.im))
         if self.im:
             s += 'i'
         if self.real == 0 and self.im == 0:
@@ -214,21 +219,15 @@ class Complex:
         return s
 
     def __repr__(self):
-        if isinstance(self.im, float) and self.im.is_integer():
-            self.im = int(self.im)
-        if isinstance(self.real, float) and self.real.is_integer():
-            self.real = int(self.real)
         s = ""
-        im = round(self.im, 4)
-        real = round(self.real, 4)
         if self.real != 0:
-            s += "{}".format(real)
-        if self.im > 0 and self.real:
+            s += str(self.real)
+        if self.im > 0 and self.real != 0:
             s += '+'
         if self.im < 0:
             s += '-'
-        if ft_abs(self.im) != 1 and self.im:
-            s += "{}".format(ft_abs(im))
+        if ft_abs(self.im) != 1 and self.im != 0:
+            s += "{}".format(ft_abs(self.im))
         if self.im:
             s += 'i'
         if self.real == 0 and self.im == 0:

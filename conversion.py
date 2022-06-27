@@ -1,6 +1,7 @@
 from function import Function
 from ft_matrix import Matrix
 from ft_complex import Complex
+from ft_real import Real
 import re
 
 
@@ -44,17 +45,17 @@ def str_to_complex(comp):
         return Complex(im=1)
     elif n == 1:
         if matches[0].span()[1] == len(comp):
-            return Complex(1, float(matches[0].group()))
+            return Complex(1, Real(matches[0].group()))
         if comp[matches[0].span()[1]] == '*' or \
                 comp[matches[0].span()[1]] == 'i':
-            return Complex(im=float(matches[0].group()))
-        return Complex(real=float(matches[0].group()), im=1)
+            return Complex(im=Real(matches[0].group()))
+        return Complex(real=Real(matches[0].group()), im=1)
     elif comp[matches[0].span()[1]] == '*' or \
             comp[matches[0].span()[1]] == 'i':
-        return Complex(im=float(matches[0].group()),
-                       real=float(matches[1].group()))
-    return Complex(real=float(matches[0].group()),
-                   im=float(matches[1].group()))
+        return Complex(im=Real(matches[0].group()),
+                       real=Real(matches[1].group()))
+    return Complex(real=Real(matches[0].group()),
+                   im=Real(matches[1].group()))
 
 
 def str_to_value(x, data):
@@ -70,9 +71,7 @@ def str_to_value(x, data):
     if mat is not None:
         return mat
     try:
-        x = float(x)
-        if x.is_integer():
-            return int(x)
+        x = Real(x)
         return x
     except Exception:
         if len(x) and x.isalpha() is False and \

@@ -1,6 +1,7 @@
 import re
 from ft_complex import Complex
 from ft_matrix import Matrix
+from ft_real import Real
 from decompose import decompose
 from utils import isrealnumber, get_unknown_var
 from ft_math import ft_abs
@@ -14,13 +15,13 @@ def do_operation(x1, x2, op):
             x1 not in not_var and x2 not in not_var:
         raise ValueError('multiple variables not supported')
     if isinstance(x1, str):
-        if isinstance(x2, int) and x2 == 0 and op in '*/':
+        if isinstance(x2, Real) and x2 == 0 and op in '*/':
             return 0
         if op == "*":
             return "{}{}{}".format(x2, op, x1)
         return "{}{}{}".format(x1, op, x2)
     if isinstance(x2, str):
-        if isinstance(x1, int) and x1 == 0 and op in '*/':
+        if isinstance(x1, Real) and x1 == 0 and op in '*/':
             return 0
         return "{}{}{}".format(x1, op, x2)
     try:
@@ -52,8 +53,6 @@ def do_operation(x1, x2, op):
                          .format(op, type(x1).__name__, type(x2).__name__))
     if isinstance(result, Complex) and result.im == 0:
         result = result.real
-    if isinstance(result, float):
-        result = round(result, 4)
     return result
 
 
@@ -97,7 +96,7 @@ def do_sum(expr):
     expr = ""
     for val in tmp:
         expr += val
-    if len(expr) == 0 or isrealnumber(result) is False or result != 0:
+    if len(expr) == 0 or str(result) != '0':
         result = str(result)
         if result[0] != '-':
             expr += '+'

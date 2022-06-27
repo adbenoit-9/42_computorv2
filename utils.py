@@ -1,4 +1,5 @@
 from ft_complex import Complex
+from ft_real import Real
 import re
 
 
@@ -22,10 +23,11 @@ def ismatrix(mat):
 
 
 def isrealnumber(n):
-    if isinstance(n, float) or isinstance(n, int):
+    if isinstance(n, Real):
+        return True
+    elif isinstance(n, float) or isinstance(n, int):
         return True
     return False
-
 
 def isnumber(n):
     if isrealnumber(n) or \
@@ -71,7 +73,7 @@ def rm_useless_brackets(expr):
         for elem in matches:
             span = elem.span()
             try:
-                float(elem.group()[1:-1])
+                Real(elem.group()[1:-1])
                 if span[0] == 0 or expr[span[0] - 1].isalpha() is False:
                     expr = expr[:span[0]] + elem.group()[1:-1] + expr[span[1]:]
                     change = 1
