@@ -1,7 +1,7 @@
 import re
 import math
 from ft_math import ft_abs, ft_sqrt
-from function import Function
+from ft_function import Function
 from ft_matrix import Matrix
 from ft_real import Real
 from ft_complex import isrealnumber

@@ -1,4 +1,4 @@
-from function import Function
+from ft_function import Function
 from ft_matrix import Matrix
 from ft_complex import Complex
 from ft_real import Real
