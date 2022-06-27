@@ -254,8 +254,8 @@ class Parser:
             x = do_operation(x1, x2, '^')
             if (isrealnumber(x) is False or x > 0) and \
                     (start == 0 or new_expr[start - 1] not in '*/%-^+('):
-                    new_expr = '{}+{}{}'.format(new_expr[:start], x,
-                                                new_expr[end:])
+                new_expr = '{}+{}{}'.format(new_expr[:start], x,
+                                            new_expr[end:])
             else:
                 new_expr = '{}{}{}'.format(new_expr[:start], x, new_expr[end:])
             operation = re.search(re_pow, new_expr)

@@ -29,6 +29,7 @@ def isrealnumber(n):
         return True
     return False
 
+
 def isnumber(n):
     if isrealnumber(n) or \
             isinstance(n, Complex):

@@ -41,7 +41,7 @@ class Real:
 
     def __isub__(self, other):
         return self.__sub__(other)
-    
+
     def __mul__(self, other):
         if isinstance(other, float) or isinstance(other, int):
             return Real(self.value * other)
@@ -90,7 +90,7 @@ class Real:
             return Real(other ** self.value)
         else:
             return other ** self.value
-    
+
     def __ipow__(self, other):
         return self.__pow__(self, other)
 
@@ -106,7 +106,7 @@ class Real:
         if isinstance(other, Real):
             return self.value < other.value
         return self.value < other
-        
+
     def __gt__(self, other):
         if isinstance(other, Real):
             return self.value > other.value
@@ -116,7 +116,7 @@ class Real:
         if isinstance(other, Real):
             return self.value <= other.value
         return self.value <= other
-        
+
     def __ge__(self, other):
         if isinstance(other, Real):
             return self.value >= other.value
@@ -128,7 +128,7 @@ class Real:
         elif isinstance(other, float) or isinstance(other, int):
             return Real(self.value % other)
         return self.value % other
-    
+
     def __rmod__(self, other):
         if isinstance(other, Real):
             return Real(other.value % self.value)
@@ -142,7 +142,7 @@ class Real:
         else:
             self.value %= other
         return self
-    
+
     def __neg__(self):
         return Real(-self.value)
 
