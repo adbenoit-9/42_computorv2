@@ -60,9 +60,12 @@ class Parser:
         if re.search(re_point, cmd):
             return False
         re_semicolon = r"\[\[.*\](;\[.*\])+\]"
-        re_coma = r"\[[^\[\]]*(,[^\[\]]*)+\]"
+        re_coma = r"\[\[[^\[\]]*(,[^\[\]]*)+\]"
         if (cmd.find(';') != -1 and re.search(re_semicolon, cmd) is None) or \
                 (cmd.find(',') != -1 and re.search(re_coma, cmd) is None):
+            return False
+        if cmd.find(';') == -1 and cmd.find(';') == -1 and \
+                cmd.find('[') != -1 and cmd.find('[[') == -1:
             return False
         if check_brackets(cmd) is False:
             return False
