@@ -7,12 +7,16 @@ from ft_real import Real
 from ft_complex import isrealnumber
 from conversion import str_to_complex, str_to_matrix, str_to_value
 from utils import check_brackets, list_variable, isnumber, \
-                  rm_brackets, put_space, extract_function
+                  rm_brackets, put_space, extract_function, ismatrix
 from calculator import calculator, do_operation
 
 
 class Parser:
     '''Parse a mathematic expression.'''
+
+    ##################################################
+    #  Part1: parse the syntax of the command line  #
+    ##################################################
 
     def __init__(self, data={}, cmd="") -> None:
         if isinstance(cmd, str) is False:
@@ -59,17 +63,24 @@ class Parser:
         re_point = r"[\*\/\%\^\+\-=\.\(\[;,]\."
         if re.search(re_point, cmd):
             return False
+        if self.matrix_syntax(cmd) is False:
+            return False
+        if check_brackets(cmd) is False:
+            return False
+        return self.brackets_syntax(cmd)
+
+    def matrix_syntax(self, cmd):
         re_semicolon = r"\[\[.*\](;\[.*\])+\]"
         re_coma = r"\[\[[^\[\]]*(,[^\[\]]*)+\]"
         if (cmd.find(';') != -1 and re.search(re_semicolon, cmd) is None) or \
                 (cmd.find(',') != -1 and re.search(re_coma, cmd) is None):
             return False
-        if cmd.find(';') == -1 and cmd.find(';') == -1 and \
-                cmd.find('[') != -1 and cmd.find('[[') == -1:
-            return False
-        if check_brackets(cmd) is False:
-            return False
-        return self.brackets_syntax(cmd)
+        re_matrix = r"\[(((\[[^\[\]]*\])?(;\[[^\[\]]*\])*)|([\w\+\-\*\/\%\(\)]+))\]"
+        matches = re.finditer(re_matrix, cmd)
+        for match in matches:
+            if ismatrix(match.group()) is False:
+                return False
+        return True
 
     def brackets_syntax(self, expr):
         matches = list(re.finditer(r"(\([^\(\)\[\]]*\))|(\[[^\(\)\[\]]*\])",
@@ -94,7 +105,13 @@ class Parser:
                 space = False
         return True
 
+
+    #################################################
+    #    Part2: parse and compute the expression    #
+    #################################################
+
     def start(self, expr):
+        '''Reduce the expression until it becomes a sum.'''
         if isinstance(expr, str) is False:
             raise ValueError('Parser: invalid argument')
         expr = expr.replace(' ', '')
@@ -107,34 +124,8 @@ class Parser:
         expr = self.reduce(expr)
         return expr
 
-    def end(self, result):
-        result = str(result)
-        if result[-1] in "*/+-%^":
-            raise ValueError('syntax error')
-        matches = re.finditer(r"[a-z]+", result)
-        if len(list_variable(result)) > 1:
-            raise ValueError('multiple variables not supported')
-        tmp = str_to_matrix(result, self.data)
-        if tmp is not None:
-            return repr(tmp)
-        tmp = str_to_complex(result)
-        if tmp is not None:
-            result = repr(tmp)
-        result = result.replace(' ', '')
-        matches = re.finditer(r"(?P<x>[\d\.]+)\*i", result)
-        i = 0
-        for match in matches:
-            result = result[:match.span()[0] - i] + match.group('x') + \
-                     'i' + result[match.span()[1] - i:]
-            i += 1
-        name, param = extract_function(result, "abs")
-        while param is not None:
-            result = result.replace("abs({})".format(param),
-                                    "|{}|".format(param))
-            name, param = extract_function(result, "abs")
-        return put_space(result)
-
     def put_functions(self, expr):
+        '''Replaces functions with their value'''
         math_funct = {
             'cos': math.cos,
             'sin': math.sin,
@@ -178,6 +169,7 @@ class Parser:
         return self.put_functions(expr)
 
     def put_variables(self, expr):
+        '''Replaces variables with their value'''
         matches = re.finditer(r"[a-z]+", expr)
         new_expr = expr
         i = 0
@@ -194,6 +186,7 @@ class Parser:
         return new_expr
 
     def standardize_mul(self, expr):
+        '''Add operator * where the product is implicit'''
         expr = expr.replace(')(', ')*(')
         expr = expr.replace('-(', '-1*(')
         regex = [r"(?P<x1>\d+\.?\d*)(?P<x2>([a-su-z]|[a-z]{2,}|\[))",
@@ -212,6 +205,7 @@ class Parser:
         return self.standardize_mul(expr)
 
     def factor_power(self, expr):
+        '''Factors expression: multiplication to power'''
         regex = r"[\w\^\.]+([*][\w\^\.]+)+"
         matches = list(re.finditer(regex, expr))
         i = 0
@@ -244,6 +238,7 @@ class Parser:
         return expr
 
     def compute_power(self, expr):
+        '''Calculates the powers of the expression'''
         re_pow = r"(?P<x1>[\d\.\[\];,]+|i|(\([\d\.]*[\+\-]?[\d\.]*\*?i\)))[\^](?P<x2>[-+]?[\d\.]+)"
         operation = re.search(re_pow, expr)
         new_expr = expr
@@ -265,6 +260,7 @@ class Parser:
         return new_expr.replace('-+', '-').replace('+-', '-')
 
     def compute_division(self, expr):
+        '''Calculates one division of the expression'''
         re_div = [r"(?P<x1>[\d\.]+|i|[a-z]+|(\([\d\.]*[\+\-]?[\d\.]*\*?i\)))\/(?P<x2>[-]?[\d\.]+|i|(\([\d\.]*[\+\-]?[\d\.]*\*?i\)))",
                   r"(?P<x1>[\d\.]+|i|[a-z]+)\/\((?P<x2>[\w\.\+\-\*\%]+)\)",
                   r"\((?P<x1>[\w\.\+\-\*\%]+)\)\/\((?P<x2>[\w\.\+\-\*\%]+)\)"]
@@ -297,6 +293,7 @@ class Parser:
         return expr[:match.span()[0]] + str(result) + expr[match.span()[1]:]
 
     def compute_multiplication(self, expr):
+        '''Calculates one multiplication of the expression'''
         re_mul = r"[\w\.]+([\*]{1,2}\-?[\w\.]+)+"
         matches = re.finditer(re_mul, expr)
         for match in matches:
@@ -322,6 +319,7 @@ class Parser:
         return expr.replace('--', '+')
 
     def compute_modulo(self, expr):
+        '''Calculates one modulo of the expression'''
         re_mod = r"[\w\.\[\],;]+(%[+-]?[\w\.\[\],;]+)+"
         match = re.search(re_mod, expr)
         if match is None:
@@ -338,6 +336,7 @@ class Parser:
         return expr.replace(match.group(), str(result))
 
     def join_tokens(self, tokens, op, start, end):
+        '''join tokens with the operator op from start to end'''
         new_tokens = []
         joined = ""
         for i in range(start):
@@ -353,6 +352,7 @@ class Parser:
         return new_tokens
 
     def do_matrix_operation(self, expr):
+        '''Calculates one matrix operation of the expression'''
         re_row = r"\[[\d\.i\+\-\*\/\%]+(,[\d\.i\+\-\*\/\%]+)*\]"
         re_mat = r"\[" + re_row + r"(;" + re_row + r")*\]"
         if re.search(r"\([\d\.\+\-\/\*]*i[\d\.\+\-\/\*]*\)\*{2}", expr) or \
@@ -397,6 +397,7 @@ class Parser:
         return expr
 
     def reduce(self, expr):
+        '''Do all operations except the sum'''
         new_expr = self.factor_power(expr)
         new_expr = self.compute_division(new_expr).replace('--', '+')
         new_expr = self.compute_multiplication(new_expr)
@@ -410,3 +411,36 @@ class Parser:
         if new_expr == expr:
             return new_expr
         return self.reduce(new_expr)
+
+
+    #################################################
+    #       Part3: parse and format the result      #
+    #################################################
+
+    def end(self, result):
+        '''Parse and format the result'''
+        result = str(result)
+        if result[-1] in "*/+-%^":
+            raise ValueError('syntax error')
+        matches = re.finditer(r"[a-z]+", result)
+        if len(list_variable(result)) > 1:
+            raise ValueError('multiple variables not supported')
+        tmp = str_to_matrix(result, self.data)
+        if tmp is not None:
+            return repr(tmp)
+        tmp = str_to_complex(result)
+        if tmp is not None:
+            result = repr(tmp)
+        result = result.replace(' ', '')
+        matches = re.finditer(r"(?P<x>[\d\.]+)\*i", result)
+        i = 0
+        for match in matches:
+            result = result[:match.span()[0] - i] + match.group('x') + \
+                     'i' + result[match.span()[1] - i:]
+            i += 1
+        name, param = extract_function(result, "abs")
+        while param is not None:
+            result = result.replace("abs({})".format(param),
+                                    "|{}|".format(param))
+            name, param = extract_function(result, "abs")
+        return put_space(result)
