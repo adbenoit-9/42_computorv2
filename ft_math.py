@@ -1,6 +1,6 @@
 from ft_real import Real
 from ft_complex import Complex
-from utils import isrealnumber, isnumber
+from utils import isrealnumber
 
 
 def ft_sqrt(n):

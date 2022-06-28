@@ -1,6 +1,6 @@
 from parser import Parser
 from calculator import calculator
-from conversion import str_to_complex, str_to_value
+from conversion import str_to_value
 from ft_function import Function
 from ft_complex import Complex
 from utils import check_brackets

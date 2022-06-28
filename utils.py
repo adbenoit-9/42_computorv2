@@ -37,11 +37,19 @@ def isnumber(n):
     return False
 
 
-def extract_function(expr, option=None):
-    if option is None:
+def extract_function(expr, to_find=None):
+    '''Extract a funtion from an expression.
+        Args:
+            expr: string.
+            to_find: function to extract. If is None, extract any function.
+        Returns:
+            name: function name.
+            param: funtion parameter, None if function not found.
+    '''
+    if to_find is None:
         regex = r"[a-z]+\("
     else:
-        regex = option + r"\("
+        regex = to_find + r"\("
     match = list(re.finditer(regex, expr))
     if len(match) == 0:
         return expr, None
@@ -57,7 +65,7 @@ def extract_function(expr, option=None):
             count -= 1
         end += 1
     param = expr[begin:end - 1]
-    if option is None and name in ['cos', 'sin', 'tan', 'exp', 'abs', 'sqrt']:
+    if to_find is None and name in ['cos', 'sin', 'tan', 'exp', 'abs', 'sqrt']:
         matches = re.finditer(r"[a-z]+", param)
         for match in matches:
             if match.group() != 'i':
@@ -65,7 +73,8 @@ def extract_function(expr, option=None):
     return name, param
 
 
-def rm_useless_brackets(expr):
+def rm_brackets(expr):
+    '''Removes useless brackets from an expression'''
     regex = r"\([^\(\)]*\)"
     matches = list(re.finditer(regex, expr))
     change = 1
@@ -96,6 +105,7 @@ def rm_useless_brackets(expr):
 
 
 def put_space(expr):
+    '''Put space around operators'''
     matches = re.finditer(r"[^\(\[;,][^\w\^\.\(\)\[\],;\|]+", expr)
     i = 0
     for elem in matches:
@@ -106,6 +116,12 @@ def put_space(expr):
 
 
 def check_brackets(expr, option=True):
+    '''
+    Check if all brackets of an expression match
+    Args:
+        expr: string
+        option: an otion to check the order of the match
+    '''
     i = 0
     j = 0
     for c in expr:
@@ -124,7 +140,10 @@ def check_brackets(expr, option=True):
     return True
 
 
-def get_unknown_var(expr):
+def list_variable(expr):
+    '''
+    Returns all the unknown variables of an expression.
+    '''
     matches = re.finditer(r"[a-z]+", expr)
     var = []
     for match in matches:

@@ -1,8 +1,9 @@
 import re
-from utils import rm_useless_brackets
+from utils import rm_brackets
 
 
 def get_factored_expr(expr):
+    '''Extract a factored expression.'''
     regex = [r"(?P<x1>\-?[\w\.\/\%]+)\*\((?P<x2>[\w\.\+\-\*\/]+)\)",
              r"\((?P<x1>[\w\.\+\-\*\/]+)\)\*(?P<x2>[\w\.]+)",
              r"\((?P<x1>[\w\.\+\-\*\/]+)\)\*(?P<x2>\([\w\.\+\-\*\/]+\))",
@@ -18,6 +19,7 @@ def get_factored_expr(expr):
 
 
 def power_to_mul(expr, power):
+    '''Decompose power to multiplications'''
     new_expr = ""
     try:
         power = int(power)
@@ -31,6 +33,7 @@ def power_to_mul(expr, power):
 
 
 def add_plus(expr):
+    '''add operator + in front of operator -'''
     match = re.search(r"[^\+\*\/\%]+\-", expr)
     if match is None:
         return expr
@@ -40,6 +43,7 @@ def add_plus(expr):
 
 
 def op_to_str(x1, x2, op):
+    '''Convert an operation to a string.'''
     if x2 == "1":
         return x1
     if x1 == "0":
@@ -53,8 +57,9 @@ def op_to_str(x1, x2, op):
 
 
 def decompose(expr):
+    '''Decompose an expression.'''
     expr = expr.replace(' ', '')
-    expr = rm_useless_brackets(expr)
+    expr = rm_brackets(expr)
     re_pow = r"\((?P<x>[\w\.\+\-\*\/]+)\)[\^](?P<pow>[\d\.]+)"
     matches = re.finditer(re_pow, expr)
     for match in matches:

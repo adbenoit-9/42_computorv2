@@ -6,8 +6,8 @@ from ft_matrix import Matrix
 from ft_real import Real
 from ft_complex import isrealnumber
 from conversion import str_to_complex, str_to_matrix, str_to_value
-from utils import check_brackets, get_unknown_var, isnumber, \
-                  rm_useless_brackets, put_space, extract_function
+from utils import check_brackets, list_variable, isnumber, \
+                  rm_brackets, put_space, extract_function
 from calculator import calculator, do_operation
 
 
@@ -100,7 +100,7 @@ class Parser:
         expr = self.put_functions(expr)
         expr = self.factor_power(expr)
         expr = self.compute_power(expr)
-        expr = rm_useless_brackets(expr)
+        expr = rm_brackets(expr)
         expr = self.reduce(expr)
         return expr
 
@@ -109,7 +109,7 @@ class Parser:
         if result[-1] in "*/+-%^":
             raise ValueError('syntax error')
         matches = re.finditer(r"[a-z]+", result)
-        if len(get_unknown_var(result)) > 1:
+        if len(list_variable(result)) > 1:
             raise ValueError('multiple variables not supported')
         tmp = str_to_matrix(result, self.data)
         if tmp is not None:
@@ -271,8 +271,8 @@ class Parser:
                 break
         if match is None:
             return expr
-        x1 = rm_useless_brackets(match.group('x1'))
-        x2 = rm_useless_brackets(match.group('x2'))
+        x1 = rm_brackets(match.group('x1'))
+        x2 = rm_brackets(match.group('x2'))
         x1 = str_to_value(x1, self.data)
         x2 = str_to_value(x2, self.data)
         if isnumber(x1) is False:

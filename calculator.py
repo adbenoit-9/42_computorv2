@@ -3,12 +3,13 @@ from ft_complex import Complex
 from ft_matrix import Matrix
 from ft_real import Real
 from decompose import decompose
-from utils import isrealnumber, get_unknown_var
+from utils import list_variable
 from ft_math import ft_abs
 from conversion import str_to_value
 
 
 def do_operation(x1, x2, op):
+    '''Does operation op between x1 and x2.'''
     not_var = ['tan', 'abs', 'sin', 'cos', 'exp', 'i', 't', 'sqrt']
     if isinstance(x1, str) and isinstance(x2, str) and x1 != x2 and \
             x1.isalpha() and x2.isalpha() and \
@@ -56,7 +57,8 @@ def do_operation(x1, x2, op):
     return result
 
 
-def split_operation(expr):
+def get_tokens(expr):
+    '''split an expression by operators + and -'''
     matches = re.finditer(r"[+-]", expr)
     tokens = []
     tmp = 0
@@ -74,7 +76,8 @@ def split_operation(expr):
 
 
 def do_sum(expr):
-    tokens = split_operation(expr)
+    '''Does all the additions of an expression.'''
+    tokens = get_tokens(expr)
     result = 0
     value = 0
     op = None
@@ -106,18 +109,24 @@ def do_sum(expr):
     return expr
 
 
-def calculator(expr, parser, option=0):
+def calculator(expr, parser, option=None):
+    '''Computes an expression
+        Args:
+            expr: string
+            parser: the parser
+            option: if option exists doesn't decompose the expression
+        Returns the result of the espression'''
     expr = parser.start(expr)
     tmp = expr
     match = re.search(r"\([^\(\)]+\)", expr)
-    if len(get_unknown_var(expr)) == 0:
-        option = 0
+    if len(list_variable(expr)) == 0:
+        option = None
     while match is not None:
         new_expr = do_sum(match.group()[1:-1])
         expr = expr.replace(match.group(), "({})".format(new_expr))
         expr = parser.start(expr)
         if tmp == expr:
-            if option == 0:
+            if option is None:
                 tmp = expr
                 expr = decompose(expr)
                 if tmp == expr:
