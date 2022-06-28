@@ -140,7 +140,7 @@ def check_brackets(expr, option=True):
     return True
 
 
-def list_variable(expr):
+def get_variables(expr):
     '''
     Returns all the unknown variables of an expression.
     '''

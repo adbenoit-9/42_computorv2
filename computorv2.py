@@ -48,6 +48,13 @@ def resolve(name, x, y, parser):
 
 
 def cli(data, cmd):
+    '''
+    Command line interpreter.
+        Args:
+            data: dictionnary that contains variables and functions
+            cmd: string
+        Returns the result of the command.
+    '''
     parser = Parser(data, cmd)
     cmd = parser.cmd
     name, param = isfunction(cmd[0])

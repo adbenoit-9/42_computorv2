@@ -3,28 +3,37 @@ from ft_complex import Complex
 from ft_matrix import Matrix
 from ft_real import Real
 from decompose import decompose
-from utils import list_variable
+from utils import get_variables
 from ft_math import ft_abs
 from conversion import str_to_value
 
-
-def do_operation(x1, x2, op):
-    '''Does operation op between x1 and x2.'''
+def handle_str(x1, x2, op):
+    '''Does operation on string.'''
     not_var = ['tan', 'abs', 'sin', 'cos', 'exp', 'i', 't', 'sqrt']
     if isinstance(x1, str) and isinstance(x2, str) and x1 != x2 and \
             x1.isalpha() and x2.isalpha() and \
             x1 not in not_var and x2 not in not_var:
         raise ValueError('multiple variables not supported')
     if isinstance(x1, str):
+        if x1 == 't':
+            raise ValueError('syntax error')
         if isinstance(x2, Real) and x2 == 0 and op in '*/':
             return 0
         if op == "*":
             return "{}{}{}".format(x2, op, x1)
         return "{}{}{}".format(x1, op, x2)
     if isinstance(x2, str):
+        if x2 == 't':
+            raise ValueError('syntax error')
         if isinstance(x1, Real) and x1 == 0 and op in '*/':
             return 0
         return "{}{}{}".format(x1, op, x2)
+    return None
+
+def do_operation(x1, x2, op):
+    '''Does operation op between x1 and x2.'''
+    if isinstance(x1, str) or isinstance(x2, str):
+        return handle_str(x1, x2, op)
     try:
         if op == '+':
             result = x1 + x2
@@ -119,7 +128,7 @@ def calculator(expr, parser, option=None):
     expr = parser.start(expr)
     tmp = expr
     match = re.search(r"\([^\(\)]+\)", expr)
-    if len(list_variable(expr)) == 0:
+    if len(get_variables(expr)) == 0:
         option = None
     while match is not None:
         new_expr = do_sum(match.group()[1:-1])

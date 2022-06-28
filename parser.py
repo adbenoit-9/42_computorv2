@@ -6,7 +6,7 @@ from ft_matrix import Matrix
 from ft_real import Real
 from ft_complex import isrealnumber
 from conversion import str_to_complex, str_to_matrix, str_to_value
-from utils import check_brackets, list_variable, isnumber, \
+from utils import check_brackets, get_variables, isnumber, \
                   rm_brackets, put_space, extract_function, ismatrix
 from calculator import calculator, do_operation
 
@@ -423,7 +423,7 @@ class Parser:
         if result[-1] in "*/+-%^":
             raise ValueError('syntax error')
         matches = re.finditer(r"[a-z]+", result)
-        if len(list_variable(result)) > 1:
+        if len(get_variables(result)) > 1:
             raise ValueError('multiple variables not supported')
         tmp = str_to_matrix(result, self.data)
         if tmp is not None:
