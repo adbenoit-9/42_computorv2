@@ -8,7 +8,7 @@ from ft_math import ft_abs
 from conversion import str_to_value
 
 
-def handle_str(x1, x2, op):
+def handle_str_op(x1, x2, op):
     '''Does operation on string.'''
     not_var = ['tan', 'abs', 'sin', 'cos', 'exp', 'i', 't', 'sqrt']
     if isinstance(x1, str) and isinstance(x2, str) and x1 != x2 and \
@@ -35,7 +35,7 @@ def handle_str(x1, x2, op):
 def do_operation(x1, x2, op):
     '''Does operation op between x1 and x2.'''
     if isinstance(x1, str) or isinstance(x2, str):
-        return handle_str(x1, x2, op)
+        return handle_str_op(x1, x2, op)
     try:
         if op == '+':
             result = x1 + x2
