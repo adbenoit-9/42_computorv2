@@ -30,7 +30,7 @@ def ft_sqrt(n):
 
 def ft_abs(n):
     if isinstance(n, Complex):
-        return n.conjugate()
+        return n.module()
     if isrealnumber(n) is False:
         raise TypeError("must be number, not '{}'"
                         .format(type(n).__name__))
