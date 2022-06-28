@@ -22,14 +22,13 @@ def data_to_str(data):
     ret = ""
     for i, key in enumerate(data.keys()):
         if isinstance(data[key], Function) is False:
-            if i != 0:
-                ret += '\n'
             if isinstance(data[key], Complex):
-                ret += "{}: {}".format(key, repr(data[key]))
+                ret += "{}: {}\n".format(key, repr(data[key]))
             else:
-                ret += "{}: {}".format(key, data[key])
+                ret += "{}: {}\n".format(key, data[key])
     if len(ret) == 0:
         return None
+    ret = ret.rstrip('\n')
     return ret
 
 
