@@ -105,7 +105,6 @@ class Parser:
                 space = False
         return True
 
-
     #################################################
     #    Part2: parse and compute the expression    #
     #################################################
@@ -411,7 +410,6 @@ class Parser:
         if new_expr == expr:
             return new_expr
         return self.reduce(new_expr)
-
 
     #################################################
     #       Part3: parse and format the result      #

@@ -7,6 +7,7 @@ from utils import get_variables
 from ft_math import ft_abs
 from conversion import str_to_value
 
+
 def handle_str(x1, x2, op):
     '''Does operation on string.'''
     not_var = ['tan', 'abs', 'sin', 'cos', 'exp', 'i', 't', 'sqrt']
@@ -29,6 +30,7 @@ def handle_str(x1, x2, op):
             return 0
         return "{}{}{}".format(x1, op, x2)
     return None
+
 
 def do_operation(x1, x2, op):
     '''Does operation op between x1 and x2.'''
