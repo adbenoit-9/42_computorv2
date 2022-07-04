@@ -83,7 +83,7 @@ syntax: `a + bi` (a, b) ∈ Q2
 - Usual functions supported:
     - exponential: `exp(expression)`
     - square root: `sqrt(expression)`
-    - absolute value: `|expression|`
+    - absolute value / module: `|expression|`
     - cosine: `cos(expression)`
     - sinus: `sin(expression)`
     - tangent: `tan(expression)`
