@@ -54,10 +54,14 @@ $ python3 computorv2.py
 > funct_name(var_name) = expression ?
 ```
 
+![1](examples/function.png)
+
 ### Resolution of a computation
 ```
 > computation = ?
 ```
+
+![2](examples/computation.png)
 
 ### Matrix
 
@@ -65,9 +69,13 @@ syntax: `[[A0-0, A0-1, ...]; [A1-0, A1-1, ...]; ...]` A ∈ Mn-p(Q)\
 The semicolon is used to separate the rows of a matrix\
 the comma is used to separate the columns of a matrix
 
+![3](examples/matrix.png)
+
 ### Complex
 
 syntax: `a + bi` (a, b) ∈ Q2
+
+![3](examples/complex.png)
 
 ### Bonus
 

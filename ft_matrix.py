@@ -167,7 +167,8 @@ term-to-term multiplication between matrices of differents dimensions""")
         if n == 0:
             return self.identity(self.shape[0])
         ret = self.copy()
-        for i in range(n - 1):
+        k = int(n.value) - 1
+        for i in range(k):
             ret = ret.dot(self)
         return ret
 
